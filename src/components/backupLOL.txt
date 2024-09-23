@@ -1,0 +1,45 @@
+app layout:
+<template>
+  <div class="flex">
+    <!-- Sidebar -->
+    <Sidebar 
+      :initialMinimal="initialMinimal" 
+      @update:minimal="handleUpdateMinimal" 
+    />
+
+    <!-- Main Content -->
+    <div>
+      <slot />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import Sidebar from './Sidebar.vue'
+
+const props = defineProps<{
+  initialMinimal?: boolean
+}>()
+
+const isMinimal = ref(props.initialMinimal ?? false)
+
+const handleUpdateMinimal = (value: boolean) => {
+  isMinimal.value = value
+}
+</script>
+
+<style scoped>
+.flex {
+  display: flex;
+}
+.flex-grow {
+  flex-grow: 1;
+}
+.p-4 {
+  padding: 1rem;
+}
+</style>
+
+
+
