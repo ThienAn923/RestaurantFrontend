@@ -2,9 +2,14 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 interface Position {
-    id: string,
-    positionName: string,
-    positionDescription: string,
+    id: string
+    positionName: string
+    positionDescription: string | null
+    totalEmployee: number
+    headOfPosition: string | null
+    isDeleted: boolean
+    updateAt: Date
+    createAt: Date
 }
 
 export const usePositionStore = defineStore('position', () => {
@@ -12,22 +17,26 @@ export const usePositionStore = defineStore('position', () => {
     const currentPage = ref(1)
     const totalItems = ref(0)
     const itemsPerPage = 5
+    const sortColumn = ref('positionName')
+    const sortOrder = ref<'asc' | 'desc'>('asc')
 
     const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage))
 
     const fetchPositions = async (page: number) => {
         try {
-            const response = await fetch(`http://localhost:3000/api/position?page=${page}&limit=${itemsPerPage}`)
+            const url = `http://localhost:3000/api/position?page=${page}&limit=${itemsPerPage}&sortColumn=${sortColumn.value}&sortOrder=${sortOrder.value}`;
+            const response = await fetch(url)
             const data = await response.json()
             positions.value = data.positions
             totalItems.value = data.total
             currentPage.value = page
+            console.log(url);
         } catch (error) {
             console.error('Error fetching positions:', error)
         }
     }
 
-    const addPosition = async (newPosition: Omit<Position, 'id'>) => {
+    const addPosition = async (newPosition: Omit<Position, 'id' | 'isDeleted' | 'updateAt' | 'createAt'>) => {
         try {
             const response = await fetch('http://localhost:3000/api/position', {
                 method: 'POST',
@@ -40,15 +49,14 @@ export const usePositionStore = defineStore('position', () => {
                 console.error('Failed to add position')
             }
         } catch (error) {
-            console.error('Error adding position:', error);
+            console.error('Error adding position:', error)
         }
     }
 
-    const updatePosition = async (updatedPosition: Position) => {
+    const updatePosition = async (updatedPosition: Omit<Position, 'isDeleted' | 'updateAt' | 'createAt'>) => {
         try {
-            const {id, ...updatedPositionWithoutId} = updatedPosition;
-            console.log(JSON.stringify(updatedPositionWithoutId));
-            const response = await fetch(`http://localhost:3000/api/position/${updatedPosition.id}`, {
+            const { id, ...updatedPositionWithoutId } = updatedPosition
+            const response = await fetch(`http://localhost:3000/api/position/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedPositionWithoutId),
@@ -57,13 +65,11 @@ export const usePositionStore = defineStore('position', () => {
                 await fetchPositions(currentPage.value)
             } else {
                 console.error('Failed to update position')
-                const responseBody = await response.text(); // read the response body
-                console.error('Response body:', responseBody);
-                
-                
+                const responseBody = await response.text()
+                console.error('Response body:', responseBody)
             }
         } catch (error) {
-            console.error('Error updating position:', error);
+            console.error('Error updating position:', error)
         }
     }
 
@@ -78,8 +84,13 @@ export const usePositionStore = defineStore('position', () => {
                 console.error('Failed to delete position')
             }
         } catch (error) {
-            console.error('Error deleting position:', error);
+            console.error('Error deleting position:', error)
         }
+    }
+
+    const setSorting = (column: string, order: 'asc' | 'desc') => {
+        sortColumn.value = column
+        sortOrder.value = order
     }
 
     return {
@@ -87,9 +98,12 @@ export const usePositionStore = defineStore('position', () => {
         currentPage,
         totalItems,
         totalPages,
+        sortColumn,
+        sortOrder,
         fetchPositions,
         addPosition,
         updatePosition,
         deletePosition,
+        setSorting,
     }
 })

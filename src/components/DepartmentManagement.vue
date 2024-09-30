@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { PlusIcon, PencilIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
+import { PlusIcon, PencilIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, InfoIcon, ChevronUpIcon, ChevronDownIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -9,40 +9,67 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useDepartmentStore } from './pinia/department.store'
 
-const DepartmentStore = useDepartmentStore()
+const departmentStore = useDepartmentStore()
 
 const isAddModalOpen = ref(false)
 const isEditModalOpen = ref(false)
-const currentDepartment = ref({ id: '', departmentName: '', departmentDescription: '' })
-const newDepartment = ref({ departmentName: '', departmentDescription: '' })
+const isInfoModalOpen = ref(false)
+const currentDepartment = ref({
+  id: '',
+  departmentName: '',
+  departmentDescription: null as string | null,
+  totalEmployee: 0,
+  headOfDepartment: null as string | null,
+  createAt: new Date(),
+  updateAt: new Date(),
+})
+const newDepartment = ref({
+  departmentName: '',
+  departmentDescription: null as string | null,
+  totalEmployee: 0,
+  headOfDepartment: null as string | null,
+})
+
+const sortColumn = ref('departmentName')
+const sortOrder = ref<'asc' | 'desc'>('asc')
 
 onMounted(() => {
-  DepartmentStore.fetchDepartments(1)
+  departmentStore.fetchDepartments(1)
 })
 
 const addDepartment = async () => {
-  await DepartmentStore.addDepartment(newDepartment.value)
+  await departmentStore.addDepartment(newDepartment.value)
   isAddModalOpen.value = false
-  newDepartment.value = { departmentName: '', departmentDescription: '' }
+  newDepartment.value = {
+    departmentName: '',
+    departmentDescription: null as string | null,
+    totalEmployee: 0,
+    headOfDepartment: null as string | null,
+  }
 }
 
-const openEditModal = (department: { id: string; departmentName: string; departmentDescription: string }) => {
+const openEditModal = (department: typeof currentDepartment.value) => {
   currentDepartment.value = { ...department }
   isEditModalOpen.value = true
 }
 
+const openInfoModal = (department: typeof currentDepartment.value) => {
+  currentDepartment.value = { ...department }
+  isInfoModalOpen.value = true
+}
+
 const editDepartment = async () => {
-  await DepartmentStore.updateDepartment(currentDepartment.value)
+  await departmentStore.updateDepartment(currentDepartment.value)
   isEditModalOpen.value = false
 }
 
 const deleteDepartment = async (id: string) => {
-  await DepartmentStore.deleteDepartment(id)
+  await departmentStore.deleteDepartment(id)
 }
 
 const pageNumbers = computed(() => {
-  const totalPages = DepartmentStore.totalPages
-  const currentPage = DepartmentStore.currentPage
+  const totalPages = departmentStore.totalPages
+  const currentPage = departmentStore.currentPage
   const pages = []
 
   if (totalPages <= 4) {
@@ -63,7 +90,23 @@ const pageNumbers = computed(() => {
 })
 
 const goToPage = (page: number) => {
-  DepartmentStore.fetchDepartments(page)
+  departmentStore.fetchDepartments(page)
+}
+
+const sortTable = (column: string) => {
+  if (sortColumn.value === column) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortColumn.value = column
+    sortOrder.value = 'asc'
+  }
+  departmentStore.setSorting(sortColumn.value, sortOrder.value)
+  departmentStore.fetchDepartments(1)
+}
+
+const getSortIcon = (column: string) => {
+  if (sortColumn.value !== column) return null
+  return sortOrder.value === 'asc' ? ChevronUpIcon : ChevronDownIcon
 }
 </script>
 
@@ -80,16 +123,63 @@ const goToPage = (page: number) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Description</TableHead>
+            <TableHead @click="sortTable('departmentName')" class="cursor-pointer">
+              <div class="flex items-center justify-between">
+                <span>Name</span>
+                <component 
+                  :is="getSortIcon('departmentName') || 'div'" 
+                  class="w-4 h-4 ml-2"
+                  :class="{'text-transparent': !getSortIcon('departmentName')}"
+                />
+              </div>
+            </TableHead>
+            <TableHead @click="sortTable('totalEmployee')" class="cursor-pointer">
+              <div class="flex items-center justify-between">
+                <span>Total Employees</span>
+                <component 
+                  :is="getSortIcon('totalEmployee') || 'div'" 
+                  class="w-4 h-4 ml-2"
+                  :class="{'text-transparent': !getSortIcon('totalEmployee')}"
+                />
+              </div>
+            </TableHead>
+            <TableHead @click="sortTable('headOfDepartment')" class="cursor-pointer">
+              <div class="flex items-center justify-between">
+                <span>Head of Department</span>
+                <component 
+                  :is="getSortIcon('headOfDepartment') || 'div'" 
+                  class="w-4 h-4 ml-2"
+                  :class="{'text-transparent': !getSortIcon('headOfDepartment')}"
+                />
+              </div>
+            </TableHead>
+            <TableHead @click="sortTable('createAt')" class="cursor-pointer">
+              <div class="flex items-center justify-between">
+                <span>Created At</span>
+                <component 
+                  :is="getSortIcon('createAt') || 'div'" 
+                  class="w-4 h-4 ml-2"
+                  :class="{'text-transparent': !getSortIcon('createAt')}"
+                />
+              </div>
+            </TableHead>
             <TableHead class="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-for="department in DepartmentStore.departments" :key="department.id">
+          <TableRow v-for="department in departmentStore.departments" :key="department.id">
             <TableCell class="font-medium">{{ department.departmentName }}</TableCell>
-            <TableCell>{{ department.departmentDescription }}</TableCell>
+            <TableCell>{{ department.totalEmployee }}</TableCell>
+            <TableCell>{{ department.headOfDepartment }}</TableCell>
+            <TableCell>{{ new Date(department.createAt).toLocaleString() }}</TableCell>
             <TableCell class="text-right">
+              <Button
+                variant="ghost"
+                size="icon"
+                @click="openInfoModal(department)"
+              >
+                <InfoIcon class="h-4 w-4" />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -113,14 +203,14 @@ const goToPage = (page: number) => {
     <!-- Pagination -->
     <div class="mt-4 flex items-center justify-between">
       <div class="text-sm text-gray-700">
-        Showing {{ (DepartmentStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(DepartmentStore.currentPage * 5, DepartmentStore.totalItems) }} of {{ DepartmentStore.totalItems }} entries
+        Showing {{ (departmentStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(departmentStore.currentPage * 5, departmentStore.totalItems) }} of {{ departmentStore.totalItems }} entries
       </div>
       <div class="flex items-center space-x-2">
         <Button
           variant="outline"
           size="sm"
-          @click="goToPage(DepartmentStore.currentPage - 1)"
-          :disabled="DepartmentStore.currentPage === 1"
+          @click="goToPage(departmentStore.currentPage - 1)"
+          :disabled="departmentStore.currentPage === 1"
         >
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
@@ -129,7 +219,7 @@ const goToPage = (page: number) => {
           :key="page"
           variant="outline"
           size="sm"
-          :class="{ 'bg-primary text-primary-foreground': page === DepartmentStore.currentPage }"
+          :class="{ 'bg-primary text-primary-foreground': page === departmentStore.currentPage }"
           @click="typeof page === 'number' ? goToPage(page) : null"
           :disabled="typeof page !== 'number'"
         >
@@ -138,14 +228,15 @@ const goToPage = (page: number) => {
         <Button
           variant="outline"
           size="sm"
-          @click="goToPage(DepartmentStore.currentPage + 1)"
-          :disabled="DepartmentStore.currentPage === DepartmentStore.totalPages"
+          @click="goToPage(departmentStore.currentPage + 1)"
+          :disabled="departmentStore.currentPage === departmentStore.totalPages"
         >
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
       </div>
     </div>
 
+    <!-- Add Department Modal -->
     <Dialog v-model:open="isAddModalOpen">
       <DialogContent>
         <DialogHeader>
@@ -168,7 +259,22 @@ const goToPage = (page: number) => {
             <Textarea
               id="description"
               v-model="newDepartment.departmentDescription"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="totalEmployee">Total Employees</Label>
+            <Input
+              id="totalEmployee"
+              type="number"
+              v-model="newDepartment.totalEmployee"
               required
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="headOfDepartment">Head of Department</Label>
+            <Input
+              id="headOfDepartment"
+              v-model="newDepartment.headOfDepartment"
             />
           </div>
           <DialogFooter>
@@ -178,6 +284,52 @@ const goToPage = (page: number) => {
       </DialogContent>
     </Dialog>
 
+    <!-- Lmao so the thing is we dont have employee yet soooo, let just put it here and make it work later -->
+    <Dialog v-model:open="isAddModalOpen222222222222222">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add New Department</DialogTitle>
+          <DialogDescription>
+            Enter the details for the new department.
+          </DialogDescription>
+        </DialogHeader>
+        <form @submit.prevent="addDepartment" class="space-y-4">
+          <div class="space-y-2">
+            <Label for="name">Name</Label>
+            <Input
+              id="name"
+              v-model="newDepartment.departmentName"
+              required
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="description">Description</Label>
+            <Textarea
+              id="description"
+              v-model="newDepartment.departmentDescription"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="headOfDepartment">Head of Department</Label>
+            <Select v-model="newDepartment.headOfDepartment">
+              <SelectTrigger>
+                <SelectValue placeholder="Select head of department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="employee in employeeStore.employees" :key="employee.id" :value="employee.id">
+                  {{ employee.Person.firstName }} {{ employee.Person.lastName }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button type="submit">Add Department</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+
+    <!-- Edit Department Modal -->
     <Dialog v-model:open="isEditModalOpen">
       <DialogContent>
         <DialogHeader>
@@ -200,7 +352,22 @@ const goToPage = (page: number) => {
             <Textarea
               id="edit-description"
               v-model="currentDepartment.departmentDescription"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="edit-totalEmployee">Total Employees</Label>
+            <Input
+              id="edit-totalEmployee"
+              type="number"
+              v-model="currentDepartment.totalEmployee"
               required
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="edit-headOfDepartment">Head of Department</Label>
+            <Input
+              id="edit-headOfDepartment"
+              v-model="currentDepartment.headOfDepartment"
             />
           </div>
           <DialogFooter>
@@ -209,5 +376,52 @@ const goToPage = (page: number) => {
         </form>
       </DialogContent>
     </Dialog>
+
+    <!-- Department Info Modal -->
+    <Dialog v-model:open="isInfoModalOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Department Information</DialogTitle>
+        </DialogHeader>
+        <div class="space-y-4">
+          <div>
+            <Label class="font-bold">Name:</Label>
+            <p>{{ currentDepartment.departmentName }}</p>
+          </div>
+          <div>
+            <Label class="font-bold">Description:</Label>
+            <p>{{ currentDepartment.departmentDescription || 'N/A' }}</p>
+          </div>
+          <div>
+            <Label class="font-bold">Total Employees:</Label>
+            <p>{{ currentDepartment.totalEmployee }}</p>
+          </div>
+          <div>
+            <Label class="font-bold">Head of Department:</Label>
+            <p>{{ currentDepartment.headOfDepartment || 'N/A' }}</p>
+          </div>
+          <div>
+            <Label class="font-bold">Created At:</Label>
+            <p>{{ new Date(currentDepartment.createAt).toLocaleString() }}</p>
+          </div>
+          <div>
+            <Label class="font-bold">Updated At:</Label>
+            <p>{{ new Date(currentDepartment.updateAt).toLocaleString() }}</p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button @click="isInfoModalOpen = false">Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
+
+<style scoped>
+.table-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+</style>
