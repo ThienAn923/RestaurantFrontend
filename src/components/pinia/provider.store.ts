@@ -9,8 +9,8 @@ interface Provider {
   providerEmail: string | null
   providerAddress: string | null
   providerStatus: string | null
-  createAt: string
-  updateAt: string
+  createAt: Date
+  updateAt: Date
 }
 
 export const useProviderStore = defineStore('provider', () => {
