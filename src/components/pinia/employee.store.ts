@@ -12,11 +12,10 @@ interface Position {
   positionName: string
   positionDescription?: string
 }
-
 interface Employee {
   id: string
   name: string
-  employeeAddress: string
+  employeeAdress: string
   employeeGender: boolean
   employeeDateOfBirth: string
   department: Department
@@ -47,6 +46,7 @@ export const useEmployeeStore = defineStore('employee', () => {
     try {
       const response = await fetch(`http://localhost:3000/api/employee?page=${page}&limit=${itemsPerPage}`)
       const data = await response.json()
+      console.log(data)
       employees.value = data.employees
       totalItems.value = data.total
       currentPage.value = page
@@ -77,6 +77,7 @@ export const useEmployeeStore = defineStore('employee', () => {
 
   const addEmployee = async (newEmployee: NewEmployee) => {
     try {
+      console.log(newEmployee)
       const response = await fetch('http://localhost:3000/api/employee', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -14,7 +14,7 @@ interface Promotion {
   startDate: string
   endDate: string
   isAfterDish: boolean
-  dishes: Dish[]
+  dishID: string
 }
 
 export const usePromotionStore = defineStore('promotion', () => {
@@ -33,6 +33,7 @@ export const usePromotionStore = defineStore('promotion', () => {
       promotions.value = data.promotions
       totalItems.value = data.total
       currentPage.value = page
+      console.log(data)
     } catch (error) {
       console.error('Error fetching promotions:', error)
     }

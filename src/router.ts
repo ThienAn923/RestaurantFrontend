@@ -11,11 +11,15 @@ import IngredientTypePage from './components/IngredientTypeManagementPage.vue';
 import IngredientPage from './components/IngredientManagementPage.vue';
 import employeePage from './components/employeeManagementPage.vue';
 import invoicePage from './components/invoiceManagementPage.vue';
-import promotionPage from './components/promotionManagementPage.vue';
+import promotionPage from './components/promotionmanagementPage.vue';
+import ImportInvoiceManagement from './components/ImportInvoiceManagementPage.vue'
+import { Import } from 'lucide-vue-next'
 
 const routes = [
+  { path: '/', component: DashboardPage },
   { path: '/login', component: Login },
   { path: '/Dashboard', component: DashboardPage },
+  
   {path: '/Dishes', component: DishmanagementPage},
   {path: '/DishType', component: DishTypeManagementPage},
   {path: '/table', component: TablePage},
@@ -27,6 +31,8 @@ const routes = [
   {path: '/employee', component: employeePage},
   {path: '/invoice', component: invoicePage},
   {path: '/promotion', component: promotionPage},
+  {path: '/import-invoice', component: ImportInvoiceManagement}
+
 
 ]
 

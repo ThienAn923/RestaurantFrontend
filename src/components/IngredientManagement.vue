@@ -21,6 +21,7 @@ const newIngredientType = ref({ ingredientTypeName: '', ingredientTypeDescriptio
 onMounted(async () => {
   await ingredientStore.fetchIngredients(1)
   await ingredientStore.fetchIngredientTypes()
+  console.log(ingredientStore.ingredientTypes)
 })
 
 

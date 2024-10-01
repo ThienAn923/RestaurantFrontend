@@ -13,19 +13,31 @@ import { usePromotionStore } from './pinia/promotion.store'
 const promotionStore = usePromotionStore()
 
 const isAddPromotionModalOpen = ref(false)
+const isAddPromotionForDishModalOpen = ref(false) // Biến trạng thái cho dialog thêm khuyến mãi cho món ăn
 const isEditPromotionModalOpen = ref(false)
-const currentPromotion = ref({ id: '', promotionName: '', promotionDescription: '', discount: 0, startDate: '', endDate: '', isAfterDish: false, dishes: [] })
-const newPromotion = ref({ promotionName: '', promotionDescription: '', discount: 0, startDate: '', endDate: '', isAfterDish: false, dishes: [] })
+const currentPromotion = ref({ id: '', promotionName: '', promotionDescription: '', discount: 0, startDate: '', endDate: '', isAfterDish: false, dishID: '' })
+const newPromotionAfterInvoice = ref({ promotionName: '', promotionDescription: '', discount: 0, startDate: '', endDate: '', isAfterDish: false, dishID: '' })
+const newPromotionAfterDishes = ref({ promotionName: '', promotionDescription: '', discount: 0, startDate: '', endDate: '', isAfterDish: false, dishID: '' })
 
 onMounted(async () => {
   await promotionStore.fetchPromotions(1)
   await promotionStore.fetchDishes()
+  console.log(promotionStore.promotions)
 })
 
-const addPromotion = async () => {
-  await promotionStore.addPromotion(newPromotion.value)
+const addPromotionAfterInvoice = async () => {
+  await promotionStore.addPromotion(newPromotionAfterInvoice.value)
+  console.log(newPromotionAfterInvoice.value)
   isAddPromotionModalOpen.value = false
-  newPromotion.value = { promotionName: '', promotionDescription: '', discount: 0, startDate: '', endDate: '', isAfterDish: false, dishes: [] }
+  newPromotionAfterInvoice.value = { promotionName: '', promotionDescription: '', discount: 0, startDate: '', endDate: '', isAfterDish: false, dishID: '' }
+}
+
+const addPromotionAfterDish = async () => {
+  newPromotionAfterDishes.value.startDate = new Date(newPromotionAfterDishes.value.startDate ).toISOString();
+  newPromotionAfterDishes.value.endDate = new Date(newPromotionAfterDishes.value.endDate ).toISOString();
+  await promotionStore.addPromotion(newPromotionAfterDishes.value) // Có thể thêm logic riêng nếu cần
+  isAddPromotionForDishModalOpen.value = false
+  newPromotionAfterDishes.value = { promotionName: '', promotionDescription: '', discount: 0, startDate: '', endDate: '', isAfterDish: false, dishID: '' }
 }
 
 const openEditModal = (promotion: any) => {
@@ -75,7 +87,10 @@ const goToPage = (page: number) => {
       <h1 class="text-3xl font-bold">Promotions</h1>
       <div class="space-x-2">
         <Button @click="isAddPromotionModalOpen = true" size="sm">
-          <PlusIcon class="mr-2 h-4 w-4" /> Add Promotion
+          <PlusIcon class="mr-2 h-4 w-4" /> Add Promotion For Invoice
+        </Button>
+        <Button @click="isAddPromotionForDishModalOpen = true" size="sm">
+          <PlusIcon class="mr-2 h-4 w-4" /> Add Promotion For Dish
         </Button>
       </div>
     </div>
@@ -167,12 +182,12 @@ const goToPage = (page: number) => {
             Enter the details for the new promotion.
           </DialogDescription>
         </DialogHeader>
-        <form @submit.prevent="addPromotion" class="space-y-4">
+        <form @submit.prevent="addPromotionAfterInvoice" class="space-y-4">
           <div class="space-y-2">
             <Label for="name">Name</Label>
             <Input
               id="name"
-              v-model="newPromotion.promotionName"
+              v-model="newPromotionAfterInvoice.promotionName"
               required
             />
           </div>
@@ -180,7 +195,7 @@ const goToPage = (page: number) => {
             <Label for="description">Description</Label>
             <Input
               id="description"
-              v-model="newPromotion.promotionDescription"
+              v-model="newPromotionAfterInvoice.promotionDescription"
             />
           </div>
           <div class="space-y-2">
@@ -188,7 +203,7 @@ const goToPage = (page: number) => {
             <Input
               id="discount"
               type="number"
-              v-model="newPromotion.discount"
+              v-model="newPromotionAfterInvoice.discount"
               required
             />
           </div>
@@ -197,7 +212,7 @@ const goToPage = (page: number) => {
             <Input
               id="startDate"
               type="date"
-              v-model="newPromotion.startDate"
+              v-model="newPromotionAfterInvoice.startDate"
               required
             />
           </div>
@@ -206,19 +221,74 @@ const goToPage = (page: number) => {
             <Input
               id="endDate"
               type="date"
-              v-model="newPromotion.endDate"
+              v-model="newPromotionAfterInvoice.endDate"
               required
             />
           </div>
-          <div class="flex items-center space-x-2">
-            <Checkbox id="isAfterDish" v-model="newPromotion.isAfterDish" />
-            <Label for="isAfterDish">Promotion After Dish</Label>
+          <DialogFooter>
+            <Button type="submit">Add Promotion For Invoice</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+
+    <!-- Add Promotion For Dish Modal -->
+    <Dialog v-model:open="isAddPromotionForDishModalOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Promotion For Dish</DialogTitle>
+          <DialogDescription>
+            Enter the details for the new promotion for dish.
+          </DialogDescription>
+        </DialogHeader>
+        <form @submit.prevent="addPromotionAfterDish" class="space-y-4">
+          <div class="space-y-2">
+            <Label for="name">Name</Label>
+            <Input
+              id="name"
+              v-model="newPromotionAfterDishes.promotionName"
+              required
+            />
           </div>
-          <div v-if="newPromotion.isAfterDish" class="space-y-2">
-            <Label for="dishes">Select Dishes</Label>
-            <Select v-model="newPromotion.dishes" multiple>
+          <div class="space-y-2">
+            <Label for="description">Description</Label>
+            <Input
+              id="description"
+              v-model="newPromotionAfterDishes.promotionDescription"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="discount">Discount (%)</Label>
+            <Input
+              id="discount"
+              type="number"
+              v-model="newPromotionAfterDishes.discount"
+              required
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="startDate">Start Date</Label>
+            <Input
+              id="startDate"
+              type="date"
+              v-model="newPromotionAfterDishes.startDate"
+              required
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="endDate">End Date</Label>
+            <Input
+              id="endDate"
+              type="date"
+              v-model="newPromotionAfterDishes.endDate"
+              required
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="isAfterDish">Select Dish</Label>
+            <Select v-model="newPromotionAfterDishes.dishID">
               <SelectTrigger>
-                <SelectValue placeholder="Select dishes" />
+                <SelectValue placeholder="Select Dish" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem v-for="dish in promotionStore.dishes" :key="dish.id" :value="dish.id">
@@ -228,7 +298,7 @@ const goToPage = (page: number) => {
             </Select>
           </div>
           <DialogFooter>
-            <Button type="submit">Add Promotion</Button>
+            <Button type="submit">Add Promotion For Dish</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -240,61 +310,57 @@ const goToPage = (page: number) => {
         <DialogHeader>
           <DialogTitle>Edit Promotion</DialogTitle>
           <DialogDescription>
-            Make changes to the promotion.
+            Update the details for the promotion.
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="editPromotion" class="space-y-4">
           <div class="space-y-2">
-            <Label for="edit-name">Name</Label>
+            <Label for="name">Name</Label>
             <Input
-              id="edit-name"
+              id="name"
               v-model="currentPromotion.promotionName"
               required
             />
           </div>
           <div class="space-y-2">
-            <Label for="edit-description">Description</Label>
+            <Label for="description">Description</Label>
             <Input
-              id="edit-description"
+              id="description"
               v-model="currentPromotion.promotionDescription"
             />
           </div>
           <div class="space-y-2">
-            <Label for="edit-discount">Discount (%)</Label>
+            <Label for="discount">Discount (%)</Label>
             <Input
-              id="edit-discount"
+              id="discount"
               type="number"
               v-model="currentPromotion.discount"
               required
             />
           </div>
           <div class="space-y-2">
-            <Label for="edit-startDate">Start Date</Label>
+            <Label for="startDate">Start Date</Label>
             <Input
-              id="edit-startDate"
+              id="startDate"
               type="date"
               v-model="currentPromotion.startDate"
               required
             />
           </div>
           <div class="space-y-2">
-            <Label for="edit-endDate">End Date</Label>
+            <Label for="endDate">End Date</Label>
             <Input
-              id="edit-endDate"
+              id="endDate"
               type="date"
               v-model="currentPromotion.endDate"
               required
             />
           </div>
-          <div class="flex items-center space-x-2">
-            <Checkbox id="edit-isAfterDish" v-model="currentPromotion.isAfterDish" />
-            <Label for="edit-isAfterDish">Promotion After Dish</Label>
-          </div>
-          <div v-if="currentPromotion.isAfterDish" class="space-y-2">
-            <Label for="edit-dishes">Select Dishes</Label>
-            <Select v-model="currentPromotion.dishes" multiple>
+          <div class="space-y-2">
+            <Label for="isAfterDish">Type</Label>
+            <Select v-model="currentPromotion.isAfterDish">
               <SelectTrigger>
-                <SelectValue placeholder="Select dishes" />
+                <SelectValue placeholder="Select Dish" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem v-for="dish in promotionStore.dishes" :key="dish.id" :value="dish.id">
