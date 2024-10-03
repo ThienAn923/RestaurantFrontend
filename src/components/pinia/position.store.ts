@@ -38,6 +38,7 @@ export const usePositionStore = defineStore('position', () => {
 
     const addPosition = async (newPosition: Omit<Position, 'id' | 'isDeleted' | 'updateAt' | 'createAt'>) => {
         try {
+            console.log(JSON.stringify(newPosition));
             const response = await fetch('http://localhost:3000/api/position', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

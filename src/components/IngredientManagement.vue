@@ -97,6 +97,7 @@ const goToPage = (page: number) => {
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Type</TableHead>
+            <TableHead>Create Time</TableHead>
             <TableHead class="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -104,6 +105,7 @@ const goToPage = (page: number) => {
           <TableRow v-for="ingredient in ingredientStore.ingredients" :key="ingredient.id">
             <TableCell class="font-medium">{{ ingredient.ingredientName }}</TableCell>
             <TableCell>{{ ingredient.ingredientType.ingredientTypeName }}</TableCell>
+            <TableCell>{{ ingredient.ingredientType.createAt }}</TableCell>
             <TableCell class="text-right">
               <Button
                 variant="ghost"

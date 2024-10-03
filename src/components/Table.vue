@@ -91,10 +91,12 @@ const updateTable = async () => {
     if (!editingTable.value) return;
 
     try {
+        console.log(JSON.stringify(editingTable.value));
+        const { id, ...tableWithoutID } = editingTable.value;
         const response = await fetch(`http://localhost:3000/api/table/${editingTable.value.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingTable.value),
+        body: JSON.stringify(tableWithoutID),
         });
 
         if (response.ok) {

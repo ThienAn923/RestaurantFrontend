@@ -48,6 +48,10 @@ const addDepartment = async () => {
   }
 }
 
+const findHeadOfDepartment = async () =>{
+  
+}
+
 const openEditModal = (department: typeof currentDepartment.value) => {
   currentDepartment.value = { ...department }
   isEditModalOpen.value = true

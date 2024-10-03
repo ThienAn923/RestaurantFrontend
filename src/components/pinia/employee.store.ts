@@ -16,7 +16,7 @@ interface Position {
 interface Employee {
   id: string
   name: string
-  employeeAddress: string
+  employeeAdress: string
   employeeGender: boolean
   employeeDateOfBirth: string
   department: Department
@@ -25,7 +25,7 @@ interface Employee {
 
 interface NewEmployee {
   name: string
-  employeeAddress: string
+  employeeAdress: string
   employeeGender: boolean
   employeeDateOfBirth: string
   departmentId: string

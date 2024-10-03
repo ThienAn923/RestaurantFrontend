@@ -13,7 +13,8 @@ const routes = [
   { path: '/ingredient', component: () => import('./components/IngredientManagementPage.vue') },
   { path: '/employee', component: () => import('./components/employeeManagementPage.vue') },
   { path: '/invoice', component: () => import('./components/invoiceManagementPage.vue') },
-  { path: '/promotion', component: () => import('./components/promotionManagementPage.vue') }
+  { path: '/promotion', component: () => import('./components/promotionManagementPage.vue') },
+  {path: '/import-invoice', component: () => import('./components/ImportInvoiceManagementPage.vue')},
 ]
 
 const router = createRouter({

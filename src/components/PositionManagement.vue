@@ -35,7 +35,8 @@ const sortOrder = ref<'asc' | 'desc'>('asc')
 
 onMounted(async () => {
   await positionStore.fetchPositions(1)
-  await employeeStore.fetchAllEmployees()
+  // await employeeStore.fetchAllEmployees() //will fetch this later when we count the total employee
+  //Or not, maybe i'll find a way to count the total employee, no need to fetch then count
 })
 
 const addPosition = async () => {

@@ -15,28 +15,44 @@ const employeeStore = useEmployeeStore()
 const isAddEmployeeModalOpen = ref(false)
 const isEditEmployeeModalOpen = ref(false)
 const isAccountCreatedModalOpen = ref(false)
-const currentEmployee = ref({ id: '', name: '', employeeAddress: '', employeeGender: true, employeeDateOfBirth: '', departmentId: '', positionId: '' })
-const newEmployee = ref({ name: '', employeeAddress: '', employeeGender: true, employeeDateOfBirth: '', departmentId: '', positionId: '', createAccount: false })
+const currentEmployee = ref({ name: '', employeeAdress: '', employeeGender: true, employeeDateOfBirth: '', departmentId: '', positionId: '' })
+const newEmployee = ref({ name: '', employeeAdress: '', employeeGender: true, employeeDateOfBirth: '', departmentId: '', positionId: '', createAccount: false, StartDay: '', AccountAuthority: 1})
 const createdAccount = ref({ username: '', password: '' })
 
 onMounted(async () => {
   await employeeStore.fetchEmployees(1)
   await employeeStore.fetchDepartments()
   await employeeStore.fetchPositions()
+  console.log(employeeStore.departments)
+  employeeStore.employees.forEach(emp => {
+  emp.Work.forEach(work => {
+    emp.position = work.Position.positionName
+    emp.department = work.Department.departmentName// Truy cập vào departmentName
+  })
+})
 })
 
 const addEmployee = async () => {
+  newEmployee.value.employeeDateOfBirth = new Date(newEmployee.value.employeeDateOfBirth).toISOString();
+  newEmployee.value.StartDay = new Date().toISOString();
   const result = await employeeStore.addEmployee(newEmployee.value)
   isAddEmployeeModalOpen.value = false
   if (result && result.account) {
     createdAccount.value = result.account
     isAccountCreatedModalOpen.value = true
   }
-  newEmployee.value = { name: '', employeeAddress: '', employeeGender: true, employeeDateOfBirth: '', departmentId: '', positionId: '', createAccount: false }
+  await employeeStore.fetchEmployees(employeeStore.currentPage)
+  employeeStore.employees.forEach(emp => {
+  emp.Work.forEach(work => {
+    emp.position = work.Position.positionName
+    emp.department = work.Department.departmentName// Truy cập vào departmentName
+  })
+})
+  newEmployee.value = { name: '', employeeAdress: '', employeeGender: true, employeeDateOfBirth: '', departmentId: '', positionId: '', createAccount: false, StartDay: '', AccountAuthority: 1}
 }
 
 const openEditModal = (employee: any) => {
-  currentEmployee.value = { ...employee, departmentId: employee.department.id, positionId: employee.position.id }
+    currentEmployee.value = { ...employee }
   isEditEmployeeModalOpen.value = true
 }
 
@@ -107,12 +123,12 @@ const goToPage = (page: number) => {
         </TableHeader>
         <TableBody>
           <TableRow v-for="employee in employeeStore.employees" :key="employee.id">
-            <TableCell class="font-medium">{{ employee.name }}</TableCell>
-            <TableCell>{{ employee.employeeAddress }}</TableCell>
+            <TableCell class="font-medium">{{ employee.person.name }}</TableCell>
+            <TableCell>{{ employee.employeeAdress  }}</TableCell>
             <TableCell>{{ employee.employeeGender ? 'Male' : 'Female' }}</TableCell>
             <TableCell>{{ formatDate(employee.employeeDateOfBirth) }}</TableCell>
-            <TableCell>{{ employee.department.departmentName }}</TableCell>
-            <TableCell>{{ employee.position.positionName }}</TableCell>
+            <TableCell>{{ employee.department }}</TableCell>
+            <TableCell>{{ employee.position }}</TableCell>
             <TableCell class="text-right">
               <Button
                 variant="ghost"
@@ -192,7 +208,7 @@ const goToPage = (page: number) => {
             <Label for="address">Address</Label>
             <Input
               id="address"
-              v-model="newEmployee.employeeAddress"
+              v-model="newEmployee.employeeAdress"
               required
             />
           </div>
@@ -276,7 +292,7 @@ const goToPage = (page: number) => {
             <Label for="edit-address">Address</Label>
             <Input
               id="edit-address"
-              v-model="currentEmployee.employeeAddress"
+              v-model="currentEmployee.employeeAdress"
               required
             />
           </div>
