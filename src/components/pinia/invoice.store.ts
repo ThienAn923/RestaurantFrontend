@@ -4,19 +4,35 @@ import { ref, computed } from 'vue'
 
 interface Invoice {
   id: string
-  invoiceDate: string
+  invoiceDate: Date
   totalCost: number
-  orderNote: string | null
-  employeeName: string
-  tableNumber: number
-  promotionName: string | null
+  orderNote?: string
+  totalPromotion?: number
+  invoiceStatus: boolean
+  employeeID: string
+  tableID: number
+  promotionAfterInvoice?: string
 }
 
 interface InvoiceDetail {
-  dishName: string
+  id : string
+  dishID: string
+  invoiceID: string
   quantity: number
   totalCost: number
+  promotionAfterDish?: string
+  salesPerUnit?: number
+  createAt: string
+
 }
+interface PoinUsage {
+  id        :string 
+  pointUsed :number
+  invoiceID :string
+  clientID  :string 
+}
+
+
 
 export const useInvoiceStore = defineStore('invoice', () => {
   const invoices = ref<Invoice[]>([])

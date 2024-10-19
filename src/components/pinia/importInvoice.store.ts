@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import axiosInstance, { ApiResponse } from '../services/axiosInstance'
 
 interface Employee {
   id: string
@@ -61,6 +62,9 @@ export const useImportInvoiceStore = defineStore('importinvoice', () => {
   const itemsPerPage = 5
   const sortColumn = ref('importDate')
   const sortOrder = ref<'asc' | 'desc'>('desc')
+  const search = ref('')
+  const filter = ref('AllProvider')
+
 
   const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage))
 
@@ -88,7 +92,7 @@ export const useImportInvoiceStore = defineStore('importinvoice', () => {
     try {
       const response = await fetch('http://localhost:3000/api/provider')
       const data = await response.json()
-      providers.value = data.providers
+      providers.value = data.data
     } catch (error) {
       console.error('Error fetching providers:', error)
     }
@@ -96,10 +100,18 @@ export const useImportInvoiceStore = defineStore('importinvoice', () => {
 
   const fetchImportInvoices = async (page: number, sortCol: string = sortColumn.value, sortOrd: 'asc' | 'desc' = sortOrder.value) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/importinvoice?page=${page}&limit=${itemsPerPage}&sortColumn=${sortCol}&sortOrder=${sortOrd}`)
-      const data = await response.json()
-      importInvoices.value = data.importInvoices
-      totalItems.value = data.total
+      const response = await axiosInstance.get<ApiResponse<Provider[]>>("/importInvoice", {
+        params: {
+          page: page,
+          limit: itemsPerPage,
+          sortColumn: sortColumn.value,
+          sortOrder: sortOrder.value,
+          filter: filter.value,
+          search: search.value,
+        },
+      });
+      importInvoices.value = response.data.data
+      totalItems.value = response.data.total
       currentPage.value = page
       sortColumn.value = sortCol
       sortOrder.value = sortOrd
@@ -156,6 +168,17 @@ export const useImportInvoiceStore = defineStore('importinvoice', () => {
     }
   }
 
+  const setSorting = (column: string, order: 'asc' | 'desc') => {
+    sortColumn.value = column
+    sortOrder.value = order
+  }
+  const setFilter = (filterValue: string) => {
+    filter.value = filterValue;
+  }
+  const setSearch = (searchValue: string) => {
+    search.value = searchValue;
+  }
+
   return {
     importInvoices,
     employees,
@@ -172,5 +195,8 @@ export const useImportInvoiceStore = defineStore('importinvoice', () => {
     fetchImportInvoices,
     addImportInvoice,
     deleteImportInvoice,
+    setSorting,
+    setFilter,
+    setSearch,
   }
 })

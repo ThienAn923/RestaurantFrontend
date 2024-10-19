@@ -124,7 +124,7 @@ const goToPage = (page: number) => {
         <TableBody>
           <TableRow v-for="employee in employeeStore.employees" :key="employee.id">
             <TableCell class="font-medium">{{ employee.person.name }}</TableCell>
-            <TableCell>{{ employee.employeeAdress  }}</TableCell>
+            <TableCell class="w-2/6">{{ employee.employeeAdress  }}</TableCell>
             <TableCell>{{ employee.employeeGender ? 'Male' : 'Female' }}</TableCell>
             <TableCell>{{ formatDate(employee.employeeDateOfBirth) }}</TableCell>
             <TableCell>{{ employee.department }}</TableCell>

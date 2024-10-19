@@ -1,0 +1,15 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@import 'tailwindcss/apply';
+
+edit-icon {
+  @apply text-blue-500 hover:text-green-600 hover:bg-blue-100;
+}
+info-icon {
+  @apply text-gray-500 hover:text-blue-600 hover:bg-blue-100;
+}
+delete-icon {
+  @apply text-red-500 hover:text-white hover:bg-red-500;
+}
+

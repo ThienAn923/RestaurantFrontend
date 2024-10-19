@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import axiosInstance, {type ApiResponse} from '../services/axiosInstance'
 
 interface IngredientType {
     id: string,
     ingredientTypeName: string,
     ingredientTypeDescription: string,
+    createAt: Date,
 }
 
 export const useIngredientTypeStore = defineStore('ingredientType', () => {
@@ -12,15 +14,25 @@ export const useIngredientTypeStore = defineStore('ingredientType', () => {
     const currentPage = ref(1)
     const totalItems = ref(0)
     const itemsPerPage = 5
+    const sortColumn = ref('createAt')
+    const sortOrder = ref<'desc' | 'asc'>('desc')
+    const search = ref('')
 
     const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage))
 
     const fetchIngredientTypes = async (page: number) => {
         try {
-            const response = await fetch(`http://localhost:3000/api/ingredientType?page=${page}&limit=${itemsPerPage}`)
-            const data = await response.json()
-            ingredientTypes.value = data.ingredientTypes
-            totalItems.value = data.total
+            const response = await axiosInstance.get<ApiResponse<IngredientType[]>>("/ingredientType", {
+                params: {
+                page: page,
+                limit: itemsPerPage,
+                sortColumn: sortColumn.value,
+                sortOrder: sortOrder.value,
+                search: search.value,
+                },
+            });
+            ingredientTypes.value = response.data.data
+            totalItems.value = response.data.total
             currentPage.value = page
         } catch (error) {
             console.error('Error fetching ingredientTypes:', error)
@@ -47,7 +59,6 @@ export const useIngredientTypeStore = defineStore('ingredientType', () => {
     const updateIngredientType = async (updatedIngredientType: IngredientType) => {
         try {
             const {id, ...updatedIngredientTypeWithoutId} = updatedIngredientType;
-            console.log(JSON.stringify(updatedIngredientTypeWithoutId));
             const response = await fetch(`http://localhost:3000/api/ingredientType/${updatedIngredientType.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -82,6 +93,14 @@ export const useIngredientTypeStore = defineStore('ingredientType', () => {
         }
     }
 
+    const setSorting = (column: string, order: 'asc' | 'desc') => {
+        sortColumn.value = column
+        sortOrder.value = order
+    }
+    const setSearch = (searchValue: string) => {
+        search.value = searchValue;
+    }
+
     return {
         ingredientTypes,
         currentPage,
@@ -91,5 +110,7 @@ export const useIngredientTypeStore = defineStore('ingredientType', () => {
         addIngredientType,
         updateIngredientType,
         deleteIngredientType,
+        setSorting,
+        setSearch,
     }
 })

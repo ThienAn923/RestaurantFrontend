@@ -2,7 +2,7 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { PlusIcon, PencilIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronDownIcon, CheckCircleIcon, XCircleIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useDishTypeStore } from './pinia/dishType.store'
 
 const dishTypeStore = useDishTypeStore()
@@ -98,6 +99,32 @@ const toggleAvailability = (isNewDishType: boolean) => {
   }
 }
 
+const searchQuery = ref('')
+const filterStatus = ref('')
+
+//PropertyKey in select field don't accept boolean, so i have to use string instead, backend will handle the convertion
+const statusOptions = [
+  { label: 'Available', value: 'true' },
+  { label: 'Unavailable', value: 'false' }
+]
+
+
+const resetFilters = () => {
+  searchQuery.value = ''
+  filterStatus.value = 'AllStatus'
+}
+
+watch([filterStatus], () => {
+  // alert(filterStatus.value)
+  dishTypeStore.setFilter(filterStatus.value);
+  dishTypeStore.fetchDishTypes(1)
+})
+watch([searchQuery], () => {
+  // alert(searchQuery.value)
+  dishTypeStore.setSearch(searchQuery.value);
+  dishTypeStore.fetchDishTypes(1)
+})
+
 
 </script>
 
@@ -105,9 +132,32 @@ const toggleAvailability = (isNewDishType: boolean) => {
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">Dish Types</h1>
-      <Button @click="isAddModalOpen = true" size="sm">
+      <Button @click="isAddModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
         <PlusIcon class="mr-2 h-4 w-4" /> Add Dish Type
       </Button>
+    </div>
+
+    <div class="mb-4 flex space-x-4">
+      <div class="relative flex-grow">
+        <Input
+          v-model="searchQuery"
+          placeholder="Tìm kiếm theo tên, email hoặc số điện thoại"
+          class="pl-10"
+        />
+        <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+      </div>
+      <Select v-model="filterStatus">
+        <SelectTrigger class="w-[200px]">
+          <SelectValue placeholder="All status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value = "AllStatus">All Status</SelectItem>
+          <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <Button @click="resetFilters" variant="outline">Reset Filters</Button>
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -202,6 +252,7 @@ const toggleAvailability = (isNewDishType: boolean) => {
           size="sm"
           @click="goToPage(dishTypeStore.currentPage - 1)"
           :disabled="dishTypeStore.currentPage === 1"
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
         >
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
@@ -210,7 +261,7 @@ const toggleAvailability = (isNewDishType: boolean) => {
           :key="page"
           variant="outline"
           size="sm"
-          :class="{ 'bg-primary text-primary-foreground': page === dishTypeStore.currentPage }"
+          :class="{ 'bg-blue-500 text-white': page === dishTypeStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== dishTypeStore.currentPage }"
           @click="typeof page === 'number' ? goToPage(page) : null"
           :disabled="typeof page !== 'number'"
         >
@@ -221,6 +272,7 @@ const toggleAvailability = (isNewDishType: boolean) => {
           size="sm"
           @click="goToPage(dishTypeStore.currentPage + 1)"
           :disabled="dishTypeStore.currentPage === dishTypeStore.totalPages"
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
         >
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
@@ -258,10 +310,13 @@ const toggleAvailability = (isNewDishType: boolean) => {
               id="available" 
               :checked="newDishType.DishTypeAvailable"
               @update:checked="toggleAvailability(true)"
+              
             />
+            <Label for="edit-available">Available</Label>
           </div>
+
           <DialogFooter>
-            <Button type="submit">Add Dish Type</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Dish Type</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -297,11 +352,12 @@ const toggleAvailability = (isNewDishType: boolean) => {
               id="edit-available" 
               :checked="currentDishType.DishTypeAvailable"
               @update:checked="toggleAvailability(false)"
+              
             />
             <Label for="edit-available">Available</Label>
           </div>
           <DialogFooter>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Save Changes</Button>
           </DialogFooter>
         </form>
       </DialogContent>

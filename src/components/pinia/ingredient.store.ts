@@ -1,10 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import axiosInstance, {type ApiResponse} from '../services/axiosInstance'
 
 interface IngredientType {
   id: string
   ingredientTypeName: string
   ingredientTypeDescription: string
+  createAt: Date
+  updatedAt: Date
 }
 
 interface Ingredient {
@@ -12,6 +15,7 @@ interface Ingredient {
   ingredientName: string
   ingredientTypeID: string
   ingredientType: IngredientType
+  createAt: Date
 }
 
 export const useIngredientStore = defineStore('ingredient', () => {
@@ -20,15 +24,28 @@ export const useIngredientStore = defineStore('ingredient', () => {
   const currentPage = ref(1)
   const totalItems = ref(0)
   const itemsPerPage = 5
+  const sortColumn = ref('createAt')
+  const sortOrder = ref<'desc' | 'asc'>('desc')
+  const search = ref('')
+  const filter = ref('AllTypes')
 
   const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage))
 
   const fetchIngredients = async (page: number) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/ingredient?page=${page}&limit=${itemsPerPage}`)
-      const data = await response.json()
-      ingredients.value = data.ingredients
-      totalItems.value = data.total
+      const response = await axiosInstance.get<ApiResponse<Ingredient[]>>("/ingredient", {
+        params: {
+          page: page,
+          limit: itemsPerPage,
+          sortColumn: sortColumn.value,
+          sortOrder: sortOrder.value,
+          filter: filter.value,
+          search: search.value,
+        },
+      });
+
+      ingredients.value = response.data.data;
+      totalItems.value = response.data.total;
       currentPage.value = page
     } catch (error) {
       console.error('Error fetching ingredients:', error)
@@ -69,13 +86,13 @@ export const useIngredientStore = defineStore('ingredient', () => {
     try {
       //i have absolute no idea why there's an error here, but it works lololol. Will fix later
       const { id, ...updatedIngredientWithoutId } = updatedIngredient
-      const { ingredientType, ...updatedIngredientWithoutType } = updatedIngredientWithoutId
+      // const { ingredientTypeId, ...updatedIngredientWithoutType } = updatedIngredientWithoutId
       const response = await fetch(`http://localhost:3000/api/ingredient/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedIngredientWithoutType),
+        body: JSON.stringify(updatedIngredientWithoutId),
       })
-      console.log(JSON.stringify(updatedIngredientWithoutType));
+      console.log(JSON.stringify(updatedIngredientWithoutId));
       if (response.ok) {
         await fetchIngredients(currentPage.value)
       } else {
@@ -118,6 +135,18 @@ export const useIngredientStore = defineStore('ingredient', () => {
     }
   }
 
+  const setSorting = (column: string, order: 'asc' | 'desc') => {
+    sortColumn.value = column
+    sortOrder.value = order
+  }
+  const setFilter = (filterValue: string) => {
+    filter.value = filterValue;
+  }
+  const setSearch = (searchValue: string) => {
+    search.value = searchValue;
+  }
+
+
   return {
     ingredients,
     ingredientTypes,
@@ -130,5 +159,8 @@ export const useIngredientStore = defineStore('ingredient', () => {
     updateIngredient,
     deleteIngredient,
     addIngredientType,
+    setSorting,
+    setFilter,
+    setSearch,
   }
 })

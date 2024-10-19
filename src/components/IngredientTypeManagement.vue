@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { PlusIcon, PencilIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
+import { ref, onMounted, computed, watch } from 'vue'
+import { PlusIcon, PencilIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronDownIcon, SearchIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -13,8 +13,11 @@ const IngredientTypeStore = useIngredientTypeStore()
 
 const isAddModalOpen = ref(false)
 const isEditModalOpen = ref(false)
-const currentIngredientType = ref({ id: '', ingredientTypeName: '', ingredientTypeDescription: '' })
+const currentIngredientType = ref({ id: '', ingredientTypeName: '', ingredientTypeDescription: '', createAt: new Date() })
 const newIngredientType = ref({ ingredientTypeName: '', ingredientTypeDescription: '' })
+const sortColumn = ref('createAt')
+const sortOrder = ref<'asc' | 'desc'>('asc')
+const searchQuery = ref('')
 
 onMounted(() => {
   IngredientTypeStore.fetchIngredientTypes(1)
@@ -62,6 +65,32 @@ const pageNumbers = computed(() => {
   return pages
 })
 
+const sortTable = (column: string) => {
+  if (sortColumn.value === column) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortColumn.value = column
+    sortOrder.value = 'asc'
+  }
+  IngredientTypeStore.setSorting(sortColumn.value, sortOrder.value)
+  IngredientTypeStore.fetchIngredientTypes(1)
+}
+
+const getSortIcon = (column: string) => {
+  if (sortColumn.value !== column) return null
+  return sortOrder.value === 'asc' ? ChevronUpIcon : ChevronDownIcon
+}
+
+const resetFilters = () => {
+  searchQuery.value = ''
+}
+
+watch([searchQuery], () => {
+  // alert(searchQuery.value)
+  IngredientTypeStore.setSearch(searchQuery.value);
+  IngredientTypeStore.fetchIngredientTypes(1)
+})
+
 const goToPage = (page: number) => {
   IngredientTypeStore.fetchIngredientTypes(page)
 }
@@ -71,29 +100,71 @@ const goToPage = (page: number) => {
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">IngredientType</h1>
-      <Button @click="isAddModalOpen = true" size="sm">
+      <Button @click="isAddModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
         <PlusIcon class="mr-2 h-4 w-4" /> Add IngredientType
       </Button>
+    </div>
+
+    <div class="mb-4 flex space-x-4">
+      <div class="relative flex-grow">
+        <Input
+          v-model="searchQuery"
+          placeholder="Tìm kiếm theo tên"
+          class="pl-10"
+        />
+        <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+      </div>
+      <Button @click="resetFilters" variant="outline">Reset Filters</Button>
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead class="text-right">Actions</TableHead>
+            <TableHead @click="sortTable('providerName')" class="cursor-pointer">
+              <div class="flex items-center justify-between">
+                <span>Name</span>
+                <component 
+                  :is="getSortIcon('ingredientTypeName') || 'div'" 
+                  class="w-4 h-4 ml-2"
+                  :class="{'text-transparent': !getSortIcon('ingredientTypeName')}"
+                />
+              </div>
+            </TableHead>
+            <TableHead @click="sortTable('ingredientTypeDescription')" class="cursor-pointer">
+              <div class="flex items-center justify-between">
+                <span>Email</span>
+                <component 
+                  :is="getSortIcon('ingredientTypeDescription') || 'div'" 
+                  class="w-4 h-4 ml-2"
+                  :class="{'text-transparent': !getSortIcon('ingredientTypeDescription')}"
+                />
+              </div>
+            </TableHead>
+            <TableHead @click="sortTable('providerName')" class="cursor-pointer">
+            <div class="flex items-center justify-between">
+                <span>Created At</span>
+                <component 
+                  :is="getSortIcon('createAt') || 'div'" 
+                  class="w-4 h-4 ml-2"
+                  :class="{'text-transparent': !getSortIcon('createAt')}"
+                />
+              </div>
+            </TableHead>
+            <TableHead class="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-for="ingredientType in IngredientTypeStore.ingredientTypes" :key="ingredientType.id">
             <TableCell class="font-medium">{{ ingredientType.ingredientTypeName }}</TableCell>
-            <TableCell>{{ ingredientType.ingredientTypeDescription }}</TableCell>
+            <TableCell class = "w-3/6">{{ ingredientType.ingredientTypeDescription }}</TableCell>
+            <TableCell>{{ new Date(ingredientType.createAt).toLocaleString()}}</TableCell>
             <TableCell class="text-right">
               <Button
                 variant="ghost"
                 size="icon"
                 @click="openEditModal(ingredientType)"
+                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100"
               >
                 <PencilIcon class="h-4 w-4" />
               </Button>
@@ -101,6 +172,7 @@ const goToPage = (page: number) => {
                 variant="ghost"
                 size="icon"
                 @click="deleteIngredientType(ingredientType.id)"
+                class="text-red-500 hover:text-white hover:bg-red-500"
               >
                 <Trash2Icon class="h-4 w-4" />
               </Button>
@@ -121,6 +193,7 @@ const goToPage = (page: number) => {
           size="sm"
           @click="goToPage(IngredientTypeStore.currentPage - 1)"
           :disabled="IngredientTypeStore.currentPage === 1"
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
         >
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
@@ -129,7 +202,7 @@ const goToPage = (page: number) => {
           :key="page"
           variant="outline"
           size="sm"
-          :class="{ 'bg-primary text-primary-foreground': page === IngredientTypeStore.currentPage }"
+          :class="{ 'bg-blue-500 text-white': page === IngredientTypeStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== IngredientTypeStore.currentPage }"
           @click="typeof page === 'number' ? goToPage(page) : null"
           :disabled="typeof page !== 'number'"
         >
@@ -140,6 +213,7 @@ const goToPage = (page: number) => {
           size="sm"
           @click="goToPage(IngredientTypeStore.currentPage + 1)"
           :disabled="IngredientTypeStore.currentPage === IngredientTypeStore.totalPages"
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
         >
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
@@ -172,7 +246,7 @@ const goToPage = (page: number) => {
             />
           </div>
           <DialogFooter>
-            <Button type="submit">Add IngredientType</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add IngredientType</Button>
           </DialogFooter>
         </form>
       </DialogContent>

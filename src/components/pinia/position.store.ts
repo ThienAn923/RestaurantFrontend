@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import axiosInstance, { ApiResponse } from '../services/axiosInstance'
 
 interface Position {
     id: string
@@ -19,18 +20,24 @@ export const usePositionStore = defineStore('position', () => {
     const itemsPerPage = 5
     const sortColumn = ref('positionName')
     const sortOrder = ref<'asc' | 'desc'>('asc')
+    const search = ref('')
 
     const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage))
 
     const fetchPositions = async (page: number) => {
         try {
-            const url = `http://localhost:3000/api/position?page=${page}&limit=${itemsPerPage}&sortColumn=${sortColumn.value}&sortOrder=${sortOrder.value}`;
-            const response = await fetch(url)
-            const data = await response.json()
-            positions.value = data.positions
-            totalItems.value = data.total
+            const response = await axiosInstance.get<ApiResponse<Position[]>>("/position", {
+                params: {
+                page: page,
+                limit: itemsPerPage,
+                sortColumn: sortColumn.value,
+                sortOrder: sortOrder.value,
+                search: search.value,
+                },
+            });
+            positions.value = response.data.data
+            totalItems.value = response.data.total
             currentPage.value = page
-            console.log(url);
         } catch (error) {
             console.error('Error fetching positions:', error)
         }
@@ -94,6 +101,10 @@ export const usePositionStore = defineStore('position', () => {
         sortOrder.value = order
     }
 
+    const setSearch = (searchValue: string) => {
+        search.value = searchValue;
+    }
+
     return {
         positions,
         currentPage,
@@ -106,5 +117,6 @@ export const usePositionStore = defineStore('position', () => {
         updatePosition,
         deletePosition,
         setSorting,
+        setSearch,
     }
 })

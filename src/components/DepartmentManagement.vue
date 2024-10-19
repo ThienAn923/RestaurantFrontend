@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { PlusIcon, PencilIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, InfoIcon, ChevronUpIcon, ChevronDownIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -112,15 +112,41 @@ const getSortIcon = (column: string) => {
   if (sortColumn.value !== column) return null
   return sortOrder.value === 'asc' ? ChevronUpIcon : ChevronDownIcon
 }
+
+const searchQuery = ref('')
+
+const resetFilters = () => {
+  searchQuery.value = ''
+}
+
+watch([searchQuery], () => {
+  // alert(searchQuery.value)
+  departmentStore.setSearch(searchQuery.value);
+  departmentStore.fetchDepartments(1)
+})
+
+
 </script>
 
 <template>
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">Department</h1>
-      <Button @click="isAddModalOpen = true" size="sm">
+      <Button @click="isAddModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
         <PlusIcon class="mr-2 h-4 w-4" /> Add Department
       </Button>
+    </div>
+
+    <div class="mb-4 flex space-x-4">
+      <div class="relative flex-grow">
+        <Input
+          v-model="searchQuery"
+          placeholder="Tìm kiếm theo tên"
+          class="pl-10"
+        />
+        <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+      </div>
+      <Button @click="resetFilters" variant="outline">Reset Filters</Button>
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -174,13 +200,18 @@ const getSortIcon = (column: string) => {
           <TableRow v-for="department in departmentStore.departments" :key="department.id">
             <TableCell class="font-medium">{{ department.departmentName }}</TableCell>
             <TableCell>{{ department.totalEmployee }}</TableCell>
-            <TableCell>{{ department.headOfDepartment }}</TableCell>
+            
+            <!-- This is one cell -->
+            <TableCell v-if="department.headOfDepartment">{{ department.headOfDepartment.name }}</TableCell>
+            <TableCell v-else>No head of department</TableCell>
+
             <TableCell>{{ new Date(department.createAt).toLocaleString() }}</TableCell>
             <TableCell class="text-right">
               <Button
                 variant="ghost"
                 size="icon"
                 @click="openInfoModal(department)"
+                class="text-gray-600 hover:text-blue-600 hover:bg-blue-100"
               >
                 <InfoIcon class="h-4 w-4" />
               </Button>
@@ -188,6 +219,7 @@ const getSortIcon = (column: string) => {
                 variant="ghost"
                 size="icon"
                 @click="openEditModal(department)"
+                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100"
               >
                 <PencilIcon class="h-4 w-4" />
               </Button>
@@ -195,6 +227,7 @@ const getSortIcon = (column: string) => {
                 variant="ghost"
                 size="icon"
                 @click="deleteDepartment(department.id)"
+                class="text-red-500 hover:text-white hover:bg-red-500"
               >
                 <Trash2Icon class="h-4 w-4" />
               </Button>
@@ -215,6 +248,8 @@ const getSortIcon = (column: string) => {
           size="sm"
           @click="goToPage(departmentStore.currentPage - 1)"
           :disabled="departmentStore.currentPage === 1"
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+
         >
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
@@ -223,7 +258,7 @@ const getSortIcon = (column: string) => {
           :key="page"
           variant="outline"
           size="sm"
-          :class="{ 'bg-primary text-primary-foreground': page === departmentStore.currentPage }"
+          :class="{ 'bg-blue-500 text-white': page === departmentStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== departmentStore.currentPage }"
           @click="typeof page === 'number' ? goToPage(page) : null"
           :disabled="typeof page !== 'number'"
         >
@@ -234,6 +269,7 @@ const getSortIcon = (column: string) => {
           size="sm"
           @click="goToPage(departmentStore.currentPage + 1)"
           :disabled="departmentStore.currentPage === departmentStore.totalPages"
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
         >
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
@@ -266,15 +302,6 @@ const getSortIcon = (column: string) => {
             />
           </div>
           <div class="space-y-2">
-            <Label for="totalEmployee">Total Employees</Label>
-            <Input
-              id="totalEmployee"
-              type="number"
-              v-model="newDepartment.totalEmployee"
-              required
-            />
-          </div>
-          <div class="space-y-2">
             <Label for="headOfDepartment">Head of Department</Label>
             <Input
               id="headOfDepartment"
@@ -282,7 +309,7 @@ const getSortIcon = (column: string) => {
             />
           </div>
           <DialogFooter>
-            <Button type="submit">Add Department</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Department</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -359,15 +386,6 @@ const getSortIcon = (column: string) => {
             />
           </div>
           <div class="space-y-2">
-            <Label for="edit-totalEmployee">Total Employees</Label>
-            <Input
-              id="edit-totalEmployee"
-              type="number"
-              v-model="currentDepartment.totalEmployee"
-              required
-            />
-          </div>
-          <div class="space-y-2">
             <Label for="edit-headOfDepartment">Head of Department</Label>
             <Input
               id="edit-headOfDepartment"
@@ -402,7 +420,7 @@ const getSortIcon = (column: string) => {
           </div>
           <div>
             <Label class="font-bold">Head of Department:</Label>
-            <p>{{ currentDepartment.headOfDepartment || 'N/A' }}</p>
+            <p>{{ currentDepartment.headOfDepartment.name || 'N/A' }}</p>
           </div>
           <div>
             <Label class="font-bold">Created At:</Label>

@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { usePromotionStore } from './pinia/promotion.store'
-
+import {ScrollArea} from '@/components/ui/scroll-area'
 const promotionStore = usePromotionStore()
 
 const isAddPromotionModalOpen = ref(false)
@@ -117,12 +117,12 @@ const filteredDishes = computed(() => {
 <template>
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold">Promotions</h1>
+      <h1 class="text-3xl font-bold black">Promotions</h1>
       <div class="space-x-2">
-        <Button @click="isAddPromotionModalOpen = true" size="sm">
+        <Button @click="isAddPromotionModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
           <PlusIcon class="mr-2 h-4 w-4" /> Add Promotion For Invoice
         </Button>
-        <Button @click="isAddPromotionForDishModalOpen = true" size="sm">
+        <Button @click="isAddPromotionForDishModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
           <PlusIcon class="mr-2 h-4 w-4" /> Add Promotion For Dish
         </Button>
       </div>
@@ -168,13 +168,13 @@ const filteredDishes = computed(() => {
             <TableCell>{{ new Date(promotion.endDate).toLocaleDateString() }}</TableCell>
             <TableCell>{{ promotion.promotionType.type }}</TableCell>
             <TableCell class="text-right">
-              <Button variant="ghost" size="icon" @click="openInfoModal(promotion)">
+              <Button variant="ghost" size="icon" @click="openInfoModal(promotion)" class="text-blue-500 hover:text-blue-600 hover:bg-blue-100">
                 <InfoIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" @click="openEditModal(promotion)">
+              <Button variant="ghost" size="icon" @click="openEditModal(promotion)" class="text-blue-500 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" @click="deletePromotion(promotion.id)">
+              <Button variant="ghost" size="icon" @click="deletePromotion(promotion.id)" class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
             </TableCell>
@@ -194,6 +194,7 @@ const filteredDishes = computed(() => {
           size="sm"
           @click="goToPage(promotionStore.currentPage - 1)"
           :disabled="promotionStore.currentPage === 1"
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
         >
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
@@ -202,7 +203,7 @@ const filteredDishes = computed(() => {
           :key="page"
           variant="outline"
           size="sm"
-          :class="{ 'bg-primary text-primary-foreground': page === promotionStore.currentPage }"
+          :class="{ 'bg-blue-500 text-white': page === promotionStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== promotionStore.currentPage }"
           @click="typeof page === 'number' ? goToPage(page) : null"
           :disabled="typeof page !== 'number'"
         >
@@ -213,6 +214,7 @@ const filteredDishes = computed(() => {
           size="sm"
           @click="goToPage(promotionStore.currentPage + 1)"
           :disabled="promotionStore.currentPage === promotionStore.totalPages"
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
         >
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
@@ -221,7 +223,8 @@ const filteredDishes = computed(() => {
 
     <!-- Add Promotion Modal -->
     <Dialog v-model:open="isAddPromotionModalOpen">
-      <DialogContent>
+      
+        <DialogContent class="h-full max-h-[660px] overflow-scroll">
         <DialogHeader>
           <DialogTitle>Add New Promotion for Invoice</DialogTitle>
           <DialogDescription>
@@ -258,22 +261,23 @@ const filteredDishes = computed(() => {
             <Input id="endDate" type="date" v-model="newPromotion.endDate" required />
           </div>
           <DialogFooter>
-            <Button type="submit">Add Promotion</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Promotion</Button>
           </DialogFooter>
         </form>
       </DialogContent>
+      
     </Dialog>
 
     <!-- Add Promotion For Dish Modal -->
     <Dialog v-model:open="isAddPromotionForDishModalOpen">
-      <DialogContent>
+      <DialogContent >
         <DialogHeader>
           <DialogTitle>Add Promotion For Dish</DialogTitle>
           <DialogDescription>
             Enter the details for the new promotion for dish.
           </DialogDescription>
         </DialogHeader>
-        <form @submit.prevent="addPromotionForDish" class="space-y-4">
+        <form @submit.prevent="addPromotionForDish" class="space-y-4 dialog-content-scroll">
           <div class="space-y-2">
             <Label for="name">Name</Label>
             <Input id="name" v-model="newPromotion.promotionName" required />
@@ -305,7 +309,7 @@ const filteredDishes = computed(() => {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Add Promotion For Dish</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Promotion For Dish</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -342,7 +346,7 @@ const filteredDishes = computed(() => {
             <Input id="edit-endDate" type="date" v-model="currentPromotion.endDate" required />
           </div>
           <DialogFooter>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Save Changes</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -389,7 +393,7 @@ const filteredDishes = computed(() => {
           </div>
         </div>
         <DialogFooter>
-          <Button @click="isInfoModalOpen = false">Close</Button>
+          <Button @click="isInfoModalOpen = false" class="bg-blue-500 hover:bg-blue-600 text-white">Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

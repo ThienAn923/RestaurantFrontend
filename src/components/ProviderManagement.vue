@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { PlusIcon, PencilIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, InfoIcon, ChevronUpIcon, ChevronDownIcon } from 'lucide-vue-next'
+import { PlusIcon, PencilIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, InfoIcon, ChevronUpIcon, ChevronDownIcon, SearchIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useProviderStore } from './pinia/provider.store'
+import {ScrollArea} from '@/components/ui/scroll-area'
 
 const providerStore = useProviderStore()
 
@@ -53,23 +54,6 @@ const statusOptions = [
     providerStore.fetchProviders(1)
   })
 
-// const addProvider = async () => {
-//   const providerData = { ...newProvider.value }
-//   // if (providerData.providerStatus === 'Custom') {
-//   //   providerData.providerStatus = providerData.customStatus
-//   // }
-//   await providerStore.addProvider(providerData)
-//   isAddModalOpen.value = false
-//   newProvider.value = {
-//     providerName: '',
-//     providerDescription: '',
-//     providerPhoneNumber: '',
-//     providerEmail: '',
-//     providerAddress: '',
-//     providerStatus: '',
-//     // customStatus: '',
-//   }
-// }
   const customStatus = ref('')
   const addProvider = async () => {
     const providerData = { ...newProvider.value }
@@ -112,6 +96,7 @@ const deleteProvider = async (id: string) => {
   await providerStore.deleteProvider(id)
 }
 
+//This function is used to display the page numbers in the pagination section
 const pageNumbers = computed(() => {
   const totalPages = providerStore.totalPages
   const currentPage = providerStore.currentPage
@@ -159,26 +144,57 @@ const getStatusColor = (status: string) => {
   return statusOption ? statusOption.color : 'bg-gray-100 text-gray-800'
 }
 
-// watch(() => newProvider.value.providerStatus, (newStatus) => {
-//   if (newStatus !== 'Custom') {
-//     newProvider.value.customStatus = ''
-//   }
-// })
+const searchQuery = ref('')
+const filterStatus = ref('')
 
-// watch(() => currentProvider.value.providerStatus, (newStatus) => {
-//   if (newStatus !== 'Custom') {
-//     currentProvider.value.customStatus = ''
-//   }
-// })
+
+const resetFilters = () => {
+  searchQuery.value = ''
+  filterStatus.value = 'AllStatus'
+}
+
+watch([filterStatus], () => {
+  // alert(filterStatus.value)
+  providerStore.setFilter(filterStatus.value);
+  providerStore.fetchProviders(1)
+})
+watch([searchQuery], () => {
+  // alert(searchQuery.value)
+  providerStore.setSearch(searchQuery.value);
+  providerStore.fetchProviders(1)
+})
+
 </script>
 
 <template>
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">Providers</h1>
-      <Button @click="isAddModalOpen = true" size="sm">
-        <PlusIcon class="mr-2 h-4 w-4" /> Add Provider
+      <Button @click="isAddModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
+        <PlusIcon class="mr-2 h-4 w-4 " /> Add Provider
       </Button>
+    </div>
+    <div class="mb-4 flex space-x-4">
+      <div class="relative flex-grow">
+        <Input
+          v-model="searchQuery"
+          placeholder="Tìm kiếm theo tên, email hoặc số điện thoại"
+          class="pl-10"
+        />
+        <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+      </div>
+      <Select v-model="filterStatus">
+        <SelectTrigger class="w-[200px]">
+          <SelectValue placeholder="Filter by status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value = "AllStatus">All Statuses</SelectItem>
+          <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <Button @click="resetFilters" variant="outline">Reset Filters</Button>
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -235,7 +251,7 @@ const getStatusColor = (status: string) => {
                 />
               </div>
             </TableHead>
-            <TableHead class="text-right">Actions</TableHead>
+            <TableHead class="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -254,6 +270,7 @@ const getStatusColor = (status: string) => {
                 variant="ghost"
                 size="icon"
                 @click="openInfoModal(provider)"
+                class="text-gray-600 hover:text-blue-600 hover:bg-blue-100"
               >
                 <InfoIcon class="h-4 w-4" />
               </Button>
@@ -261,6 +278,7 @@ const getStatusColor = (status: string) => {
                 variant="ghost"
                 size="icon"
                 @click="openEditModal(provider)"
+                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100"
               >
                 <PencilIcon class="h-4 w-4" />
               </Button>
@@ -268,6 +286,7 @@ const getStatusColor = (status: string) => {
                 variant="ghost"
                 size="icon"
                 @click="deleteProvider(provider.id)"
+                class="text-red-500 hover:text-white hover:bg-red-500"
               >
                 <Trash2Icon class="h-4 w-4" />
               </Button>
@@ -288,6 +307,7 @@ const getStatusColor = (status: string) => {
           size="sm"
           @click="goToPage(providerStore.currentPage - 1)"
           :disabled="providerStore.currentPage === 1"
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
         >
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
@@ -296,7 +316,7 @@ const getStatusColor = (status: string) => {
           :key="page"
           variant="outline"
           size="sm"
-          :class="{ 'bg-primary text-primary-foreground': page === providerStore.currentPage }"
+          :class="{ 'bg-blue-500 text-white': page === providerStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== providerStore.currentPage }"
           @click="typeof page === 'number' ? goToPage(page) : null"
           :disabled="typeof page !== 'number'"
         >
@@ -307,6 +327,7 @@ const getStatusColor = (status: string) => {
           size="sm"
           @click="goToPage(providerStore.currentPage + 1)"
           :disabled="providerStore.currentPage === providerStore.totalPages"
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
         >
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
@@ -315,7 +336,8 @@ const getStatusColor = (status: string) => {
 
     <!-- Add Provider Modal -->
     <Dialog v-model:open="isAddModalOpen">
-      <DialogContent>
+      <ScrollArea>
+        <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Provider</DialogTitle>
           <DialogDescription>
@@ -384,10 +406,11 @@ const getStatusColor = (status: string) => {
             />
           </div>
           <DialogFooter>
-            <Button type="submit">Add Provider</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Provider</Button>
           </DialogFooter>
         </form>
       </DialogContent>
+      </ScrollArea>
     </Dialog>
 
     <!-- Edit Provider Modal -->
@@ -514,3 +537,7 @@ const getStatusColor = (status: string) => {
     </Dialog>
   </div>
 </template>
+
+<!-- <style scoped>
+@import './output.css';
+</style> -->

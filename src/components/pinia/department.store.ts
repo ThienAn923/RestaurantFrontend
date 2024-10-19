@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import axiosInstance, { ApiResponse } from '../services/axiosInstance'
 
 interface Department {
   id: string
@@ -19,19 +20,26 @@ export const useDepartmentStore = defineStore('department', () => {
     const itemsPerPage = 5
     const sortColumn = ref('departmentName')
     const sortOrder = ref<'asc' | 'desc'>('asc')
+    const search = ref('')
 
     const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage))
 
     const fetchDepartments = async (page: number) => {
         try {
-            const url = `http://localhost:3000/api/department?page=${page}&limit=${itemsPerPage}&sortColumn=${sortColumn.value}&sortOrder=${sortOrder.value}`;
-            const response = await fetch(url)
-            const data = await response.json()
-            departments.value = data.departments
-            totalItems.value = data.total
+            const response = await axiosInstance.get<ApiResponse<Department[]>>("/department", {
+                params: {
+                page: page,
+                limit: itemsPerPage,
+                sortColumn: sortColumn.value,
+                sortOrder: sortOrder.value,
+                search: search.value,
+                },
+            });
+            departments.value = response.data.data
+            totalItems.value = response.data.total
             currentPage.value = page
             // console.log("YOOOOOOOOOOOOO, IM RUNNNINGGGGG")
-            console.log(url);
+
 
         } catch (error) {
             console.error('Error fetching departments:', error)
@@ -93,6 +101,10 @@ export const useDepartmentStore = defineStore('department', () => {
         sortOrder.value = order
     }
 
+    const setSearch = (searchValue: string) => {
+        search.value = searchValue;
+    }
+
     return {
         departments,
         currentPage,
@@ -105,6 +117,7 @@ export const useDepartmentStore = defineStore('department', () => {
         updateDepartment,
         deleteDepartment,
         setSorting,
+        setSearch,
     }
 })
 

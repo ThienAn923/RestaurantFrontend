@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import axiosInstance, { ApiResponse } from '../services/axiosInstance'
 
 interface DishType {
   id: string
@@ -16,15 +17,26 @@ export const useDishTypeStore = defineStore('dishType', () => {
   const itemsPerPage = 5
   const sortColumn = ref('DishTypeName')
   const sortOrder = ref<'asc' | 'desc'>('asc')
+  const search = ref('')
+  const filter = ref('AllStatus')
 
   const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage))
 
   const fetchDishTypes = async (page: number) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/dishType?page=${page}&limit=${itemsPerPage}&sortColumn=${sortColumn.value}&sortOrder=${sortOrder.value}`)
-      const data = await response.json()
-      dishTypes.value = data.dishTypes
-      totalItems.value = data.total
+      const response = await axiosInstance.get<ApiResponse<DishType[]>>("/dishType", {
+        params: {
+          page: page,
+          limit: itemsPerPage,
+          sortColumn: sortColumn.value,
+          sortOrder: sortOrder.value,
+          filter: filter.value,
+          search: search.value,
+        },
+      });
+
+      dishTypes.value = response.data.data
+      totalItems.value = response.data.total
       currentPage.value = page
     } catch (error) {
       console.error('Error fetching dish types:', error)
@@ -87,6 +99,14 @@ export const useDishTypeStore = defineStore('dishType', () => {
     sortOrder.value = order
   }
 
+   const setFilter = (filterValue: string) => {
+    filter.value = filterValue;
+  }
+  const setSearch = (searchValue: string) => {
+    search.value = searchValue;
+  }
+
+
   return {
     dishTypes,
     currentPage,
@@ -99,5 +119,7 @@ export const useDishTypeStore = defineStore('dishType', () => {
     setSorting,
     sortColumn,
     sortOrder,
+    setFilter,
+    setSearch,
   }
 })

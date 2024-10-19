@@ -9,11 +9,7 @@ import { useInvoiceStore } from './pinia/invoice.store'
 
 const invoiceStore = useInvoiceStore()
 
-interface InvoiceDetail {
-  dishName: string
-  quantity: number
-  totalCost: number
-}
+
 
 const isDetailModalOpen = ref(false)
 const currentInvoice = ref<Invoice | null>(null)

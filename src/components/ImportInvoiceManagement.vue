@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { PlusIcon, PencilIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, InfoIcon, ChevronUpIcon, ChevronDownIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -129,15 +129,61 @@ const getSortIcon = (column: string) => {
   if (sortColumn.value !== column) return null
   return sortOrder.value === 'asc' ? ChevronUpIcon : ChevronDownIcon
 }
+
+const searchQuery = ref('')
+const filterStatus = ref('')
+
+
+const resetFilters = () => {
+  searchQuery.value = ''
+  filterStatus.value = 'AllProvider'
+}
+
+watch([filterStatus], () => {
+  // alert(filterStatus.value)
+  importInvoiceStore.setFilter(filterStatus.value);
+  importInvoiceStore.fetchImportInvoices(1)
+})
+watch([searchQuery], () => {
+  // alert(searchQuery.value)
+  importInvoiceStore.setSearch(searchQuery.value);
+  importInvoiceStore.fetchImportInvoices(1)
+})
+
+
+
 </script>
 
 <template>
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">Import Invoices</h1>
-      <Button @click="isAddModalOpen = true" size="sm">
+      <Button @click="isAddModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white" >
         <PlusIcon class="mr-2 h-4 w-4" /> Add Import Invoice
       </Button>
+    </div>
+
+    <div class="mb-4 flex space-x-4">
+      <div class="relative flex-grow">
+        <Input
+          v-model="searchQuery"
+          placeholder="Tìm kiếm theo ngày, nhân viên"
+          class="pl-10"
+        />
+        <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+      </div>
+      <Select v-model="filterStatus">
+        <SelectTrigger class="w-[200px]">
+          <SelectValue placeholder="Filter by provider" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value = "AllProvider">All provider</SelectItem>
+          <SelectItem v-for="provider in importInvoiceStore.providers" :key="provider.id" :value="provider.id">
+            {{ provider.providerName }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <Button @click="resetFilters" variant="outline">Reset Filters</Button>
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -187,13 +233,23 @@ const getSortIcon = (column: string) => {
                 variant="ghost"
                 size="icon"
                 @click="openInfoModal(invoice)"
+                class="text-gray-600 hover:text-blue-600 hover:bg-blue-100"
               >
                 <InfoIcon class="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
+
+                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100"
+              >
+                <PencilIcon class="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 @click="deleteImportInvoice(invoice.id)"
+                class="text-red-500 hover:text-white hover:bg-red-500"
               >
                 <Trash2Icon class="h-4 w-4" />
               </Button>
@@ -214,6 +270,7 @@ const getSortIcon = (column: string) => {
           size="sm"
           @click="goToPage(importInvoiceStore.currentPage - 1)"
           :disabled="importInvoiceStore.currentPage === 1"
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
         >
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
@@ -222,7 +279,7 @@ const getSortIcon = (column: string) => {
           :key="page"
           variant="outline"
           size="sm"
-          :class="{ 'bg-primary text-primary-foreground': page === importInvoiceStore.currentPage }"
+          :class="{ 'bg-blue-500 text-white': page === importInvoiceStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== importInvoiceStore.currentPage }"
           @click="typeof page === 'number' ? goToPage(page) : null"
           :disabled="typeof page !== 'number'"
         >
@@ -233,6 +290,7 @@ const getSortIcon = (column: string) => {
           size="sm"
           @click="goToPage(importInvoiceStore.currentPage + 1)"
           :disabled="importInvoiceStore.currentPage === importInvoiceStore.totalPages"
+           class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
         >
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
@@ -333,7 +391,7 @@ const getSortIcon = (column: string) => {
           </div>
 
           <DialogFooter>
-            <Button type="submit">Submit</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Submit</Button>
           </DialogFooter>
         </form>
       </DialogContent>
