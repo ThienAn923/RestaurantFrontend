@@ -12,19 +12,75 @@
           <TableHead>ID</TableHead>
           <TableHead>Provider</TableHead>
           <TableHead>Employee</TableHead>
-          <TableHead>Total</TableHead>
+          <TableHead>View</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        <TableRow v-for="invoice in invoices" :key="invoice.id">
+        <TableRow v-for="invoice in ImportInvoiceStore.importInvoices" :key="invoice.id">
           <TableCell>{{ invoice.id }}</TableCell>
-          <TableCell>{{ invoice.provider }}</TableCell>
-          <TableCell>{{ invoice.employee }}</TableCell>
-          <TableCell>${{ invoice.total.toFixed(2) }}</TableCell>
+          <TableCell>{{ invoice.Provider.providerName }}</TableCell>
+          <TableCell>{{ invoice.Employee.id }}</TableCell>
+          <TableCell>
+  <Button variant="outline" size="icon" @click="openViewDialog(invoice)">
+    <EyeIcon class="h-4 w-4" /> <!-- Icon cho View -->
+  </Button>
+  <Button variant="outline" size="icon" @click="openEditDialog(invoice)">
+    <EditIcon class="h-4 w-4" /> <!-- Icon cho Edit -->
+  </Button>
+  <Button variant="outline" size="icon" @click="deleteInvoice(invoice.id)">
+    <TrashIcon class="h-4 w-4" /> <!-- Icon cho Delete -->
+  </Button>
+</TableCell>
+
+
         </TableRow>
       </TableBody>
     </Table>
+     <!-- Dialog xem chi tiết hoá đơn nhập -->
+     <Dialog :open="isViewDialogOpen" @update:open="isViewDialogOpen = $event">
+      <DialogContent class="sm:max-w-[700px]">
+        <DialogHeader>
+          <DialogTitle>Import Invoice Details</DialogTitle>
+          <DialogDescription>Details of the selected import invoice</DialogDescription>
+        </DialogHeader>
 
+        <Button variant="ghost" class="absolute top-2 right-2" @click.prevent="closeViewDialog">
+          <XIcon class="h-4 w-4" />
+        </Button>
+
+        <!-- Hiển thị thông tin chi tiết hoá đơn nhập -->
+        <div class="space-y-4">
+          <p><strong>Provider:</strong> {{ selectedInvoice?.Provider?.providerName }}</p>
+          <p><strong>Employee:</strong> {{ selectedInvoice?.Employee?.id }}</p>
+
+          <div class="border-t pt-4">
+            <h3 class="font-bold mb-2">Items</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ingredient</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Unit Price</TableHead>
+                  <TableHead>Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow v-for="(item, index) in selectedInvoice?.importInvoiceDetails" :key="index">
+                  <TableCell>{{ getIngredientName(item.ingredientId) }}</TableCell>
+                  <TableCell>{{ item.quantity }}</TableCell>
+                  <TableCell>${{ item.price.toFixed(2) }}</TableCell>
+                  <TableCell>${{ item.total.toFixed(2) }}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+
+          <div class="text-right mt-4">
+            <span class="font-bold">Total: ${{ viewInvoiceTotal }}</span>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
     <!-- Import Invoice Dialog -->
     <Dialog :open="isDialogOpen" @update:open="isDialogOpen = $event">
       <DialogContent class="sm:max-w-[700px]">
@@ -138,7 +194,8 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
-import { Import, PlusIcon, TrashIcon, XIcon } from 'lucide-vue-next'
+import { Import, PlusIcon, XIcon } from 'lucide-vue-next'
+import { EyeIcon, EditIcon, TrashIcon } from 'lucide-vue-next'
 import { useImportInvoiceStore } from './pinia/importInvoice.store'
 const ImportInvoiceStore = useImportInvoiceStore()
 const isDialogOpen = ref(false)
@@ -160,6 +217,23 @@ onMounted(async () => {
     console.error('Error in mounted hook:', error)
   }
 })
+const isViewDialogOpen = ref(false)
+const selectedInvoice = ref(null)
+
+// Mở dialog hiển thị hoá đơn nhập
+const openViewDialog = (invoice) => {
+  selectedInvoice.value = invoice
+  isViewDialogOpen.value = true
+}
+const deleteInvoice = async (id) =>
+{
+  await ImportInvoiceStore.deleteImportInvoice(id);
+}
+// Đóng dialog
+const closeViewDialog = () => {
+  isViewDialogOpen.value = false
+  selectedInvoice.value = null
+}
 const openDialog = () => {
   isDialogOpen.value = true
 }

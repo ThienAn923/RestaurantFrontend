@@ -14,9 +14,10 @@ import invoicePage from './components/invoiceManagementPage.vue';
 import promotionPage from './components/promotionmanagementPage.vue';
 import ImportInvoiceManagement from './components/ImportInvoiceManagementPage.vue'
 import { Import } from 'lucide-vue-next'
+import chefManagement from './components/chefManagement.vue'
 
 const routes = [
-  { path: '/', component: DashboardPage },
+  { path: '/', component: chefManagement },
   { path: '/login', component: Login },
   { path: '/Dashboard', component: DashboardPage },
   
