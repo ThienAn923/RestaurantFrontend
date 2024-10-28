@@ -22,7 +22,7 @@ onMounted(async () => {
     // If the dish has images, use the link of the first image as the imageUrl
     // If the dish doesn't have images, use a default image link
     const imageUrl = dish.images.length > 0 ? dish.images[0].Link : 'vite.svg';
-    
+
     // Return a new object that has all the original dish properties plus imageUrl
     return { ...dish, imageUrl };
   });
@@ -154,15 +154,15 @@ const resetNewDishForm = () => {
   <div class="h-full w-full bg-gray-50">
     <div class="p-6">
       <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">Dishes</h1>
+        <h1 class="text-3xl font-bold">Quản lý món ăn</h1>
         <div class="space-x-2">
           <Button @click="openAddDishModal">
             <Plus class="w-4 h-4 mr-2" />
-            Add Dish
+            Thêm Món Ăn
           </Button>
           <Button variant="outline" @click="openAddDishTypeModal">
             <Plus class="w-4 h-4 mr-2" />
-            Add Dish Type
+            Thêm Loại Món Ăn
           </Button>
         </div>
       </div>
@@ -174,7 +174,8 @@ const resetNewDishForm = () => {
             <h2 class="text-xl font-semibold mb-2">{{ dish.name }}</h2>
             <p class="text-gray-600 mb-2">{{ dish.description }}</p>
             <div class="flex justify-between items-center">
-              <span class="text-lg font-bold">${{ dish.costs?.length > 0 ? dish.costs[0].cost.toFixed(2) : 'N/A' }}</span>
+              <span class="text-lg font-bold">${{ dish.costs?.length > 0 ? dish.costs[0].cost.toFixed(2) : 'N/A'
+                }}</span>
               <span :class="[
                 'px-2 py-1 rounded-full text-sm',
                 dish.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'

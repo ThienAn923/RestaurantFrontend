@@ -3,16 +3,20 @@ import App from './App.vue'
 import './assets/index.css'
 import router from './router'
 import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { useAuthStore } from './components/pinia/auth'
 
-// Create the Vue app instance
 const app = createApp(App)
 
-// Create the Pinia instance
 const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
 
-// Use Pinia and Router
 app.use(pinia)
-app.use(router)
 
-// Mount the app to the DOM
-app.mount('#app')
+const authStore = useAuthStore()
+
+// Check authentication before setting up the router
+authStore.checkAuth().then(() => {
+  app.use(router)
+  app.mount('#app')
+})

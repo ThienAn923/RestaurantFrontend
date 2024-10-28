@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useProviderStore } from './pinia/provider.store'
-import {ScrollArea} from '@/components/ui/scroll-area'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 const providerStore = useProviderStore()
 
@@ -50,28 +50,28 @@ const statusOptions = [
   { value: 'Custom', label: 'Custom', color: 'bg-purple-100 text-purple-800' },
 ]
 
-  onMounted(() => {
-    providerStore.fetchProviders(1)
-  })
+onMounted(() => {
+  providerStore.fetchProviders(1)
+})
 
-  const customStatus = ref('')
-  const addProvider = async () => {
-    const providerData = { ...newProvider.value }
-    if (providerData.providerStatus === 'Custom') {
-      providerData.providerStatus = customStatus.value
-    }
-    await providerStore.addProvider(providerData)
-    isAddModalOpen.value = false
-    newProvider.value = {
-      providerName: '',
-      providerDescription: '',
-      providerPhoneNumber: '',
-      providerEmail: '',
-      providerAddress: '',
-      providerStatus: '',
-    }
-    customStatus.value = ''
+const customStatus = ref('')
+const addProvider = async () => {
+  const providerData = { ...newProvider.value }
+  if (providerData.providerStatus === 'Custom') {
+    providerData.providerStatus = customStatus.value
   }
+  await providerStore.addProvider(providerData)
+  isAddModalOpen.value = false
+  newProvider.value = {
+    providerName: '',
+    providerDescription: '',
+    providerPhoneNumber: '',
+    providerEmail: '',
+    providerAddress: '',
+    providerStatus: '',
+  }
+  customStatus.value = ''
+}
 
 const openEditModal = (provider: typeof currentProvider.value) => {
   currentProvider.value = { ...provider }
@@ -169,32 +169,28 @@ watch([searchQuery], () => {
 <template>
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold">Providers</h1>
+      <h1 class="text-3xl font-bold">Nhà Cung Cấp</h1>
       <Button @click="isAddModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
-        <PlusIcon class="mr-2 h-4 w-4 " /> Add Provider
+        <PlusIcon class="mr-2 h-4 w-4 " /> Thêm Nhà Cung Cấp
       </Button>
     </div>
     <div class="mb-4 flex space-x-4">
       <div class="relative flex-grow">
-        <Input
-          v-model="searchQuery"
-          placeholder="Tìm kiếm theo tên, email hoặc số điện thoại"
-          class="pl-10"
-        />
+        <Input v-model="searchQuery" placeholder="Tìm kiếm theo tên, email hoặc số điện thoại" class="pl-10" />
         <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
       </div>
       <Select v-model="filterStatus">
         <SelectTrigger class="w-[200px]">
-          <SelectValue placeholder="Filter by status" />
+          <SelectValue placeholder="Lọc Bằng Trạng Thái" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value = "AllStatus">All Statuses</SelectItem>
+          <SelectItem value="AllStatus">Tất Cả Trạng Thái</SelectItem>
           <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
             {{ option.label }}
           </SelectItem>
         </SelectContent>
       </Select>
-      <Button @click="resetFilters" variant="outline">Reset Filters</Button>
+      <Button @click="resetFilters" variant="outline">Reset Bộ Lọc</Button>
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -203,52 +199,37 @@ watch([searchQuery], () => {
           <TableRow>
             <TableHead @click="sortTable('providerName')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Name</span>
-                <component 
-                  :is="getSortIcon('providerName') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('providerName')}"
-                />
+                <span>Tên Nhà Cung Cấp</span>
+                <component :is="getSortIcon('providerName') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('providerName') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('providerEmail')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Email</span>
-                <component 
-                  :is="getSortIcon('providerEmail') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('providerEmail')}"
-                />
+                <span>Địa Chỉ Mail</span>
+                <component :is="getSortIcon('providerEmail') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('providerEmail') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('providerPhoneNumber')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Phone Number</span>
-                <component 
-                  :is="getSortIcon('providerPhoneNumber') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('providerPhoneNumber')}"
-                />
+                <span>Số Điện Thoại</span>
+                <component :is="getSortIcon('providerPhoneNumber') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('providerPhoneNumber') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('providerStatus')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Status</span>
-                <component 
-                  :is="getSortIcon('providerStatus') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('providerStatus')}"
-                />
+                <span>Trạng Thái</span>
+                <component :is="getSortIcon('providerStatus') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('providerStatus') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('createAt')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Created At</span>
-                <component 
-                  :is="getSortIcon('createAt') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('createAt')}"
-                />
+                <span>Ngày Tạo</span>
+                <component :is="getSortIcon('createAt') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('createAt') }" />
               </div>
             </TableHead>
             <TableHead class="text-right"></TableHead>
@@ -266,28 +247,16 @@ watch([searchQuery], () => {
             </TableCell>
             <TableCell>{{ new Date(provider.createAt).toLocaleString() }}</TableCell>
             <TableCell class="text-right">
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="openInfoModal(provider)"
-                class="text-gray-600 hover:text-blue-600 hover:bg-blue-100"
-              >
+              <Button variant="ghost" size="icon" @click="openInfoModal(provider)"
+                class="text-gray-600 hover:text-blue-600 hover:bg-blue-100">
                 <InfoIcon class="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="openEditModal(provider)"
-                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100"
-              >
+              <Button variant="ghost" size="icon" @click="openEditModal(provider)"
+                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="deleteProvider(provider.id)"
-                class="text-red-500 hover:text-white hover:bg-red-500"
-              >
+              <Button variant="ghost" size="icon" @click="deleteProvider(provider.id)"
+                class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
             </TableCell>
@@ -299,36 +268,22 @@ watch([searchQuery], () => {
     <!-- Pagination -->
     <div class="mt-4 flex items-center justify-between">
       <div class="text-sm text-gray-700">
-        Showing {{ (providerStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(providerStore.currentPage * 5, providerStore.totalItems) }} of {{ providerStore.totalItems }} entries
+        Đang xem từ {{ (providerStore.currentPage - 1) * 5 + 1 }} đến {{ Math.min(providerStore.currentPage * 5,
+          providerStore.totalItems) }} trong {{ providerStore.totalItems }} thực thể
       </div>
       <div class="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(providerStore.currentPage - 1)"
-          :disabled="providerStore.currentPage === 1"
-          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+        <Button variant="outline" size="sm" @click="goToPage(providerStore.currentPage - 1)"
+          :disabled="providerStore.currentPage === 1" class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
-        <Button
-          v-for="page in pageNumbers"
-          :key="page"
-          variant="outline"
-          size="sm"
+        <Button v-for="page in pageNumbers" :key="page" variant="outline" size="sm"
           :class="{ 'bg-blue-500 text-white': page === providerStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== providerStore.currentPage }"
-          @click="typeof page === 'number' ? goToPage(page) : null"
-          :disabled="typeof page !== 'number'"
-        >
+          @click="typeof page === 'number' ? goToPage(page) : null" :disabled="typeof page !== 'number'">
           {{ page }}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(providerStore.currentPage + 1)"
+        <Button variant="outline" size="sm" @click="goToPage(providerStore.currentPage + 1)"
           :disabled="providerStore.currentPage === providerStore.totalPages"
-          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
       </div>
@@ -338,78 +293,55 @@ watch([searchQuery], () => {
     <Dialog v-model:open="isAddModalOpen">
       <ScrollArea>
         <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add New Provider</DialogTitle>
-          <DialogDescription>
-            Enter the details for the new provider.
-          </DialogDescription>
-        </DialogHeader>
-        <form @submit.prevent="addProvider" class="space-y-4">
-          <div class="space-y-2">
-            <Label for="name">Name</Label>
-            <Input
-              id="name"
-              v-model="newProvider.providerName"
-              required
-            />
-          </div>
-          <div class="space-y-2">
-            <Label for="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              v-model="newProvider.providerEmail"
-              required
-            />
-          </div>
-          <div class="space-y-2">
-            <Label for="phoneNumber">Phone Number</Label>
-            <Input
-              id="phoneNumber"
-              v-model="newProvider.providerPhoneNumber"
-              required
-            />
-          </div>
-          <div class="space-y-2">
-            <Label for="address">Address</Label>
-            <Textarea
-              id="address"
-              v-model="newProvider.providerAddress"
-            />
-          </div>
-          <div class="space-y-2">
-          <Label for="status">Status</Label>
-          <Select v-model="newProvider.providerStatus">
-            <SelectTrigger>
-              <SelectValue placeholder="Select provider status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div v-if="newProvider.providerStatus === 'Custom'" class="space-y-2">
-          <Label for="customStatus">Custom Status</Label>
-          <Input
-            id="customStatus"
-            v-model="customStatus"
-            required
-          />
-        </div>
-          <div class="space-y-2">
-            <Label for="description">Description</Label>
-            <Textarea
-              id="description"
-              v-model="newProvider.providerDescription"
-            />
-          </div>
-          <DialogFooter>
-            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Provider</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Provider</DialogTitle>
+            <DialogDescription>
+              Enter the details for the new provider.
+            </DialogDescription>
+          </DialogHeader>
+          <form @submit.prevent="addProvider" class="space-y-4">
+            <div class="space-y-2">
+              <Label for="name">Name</Label>
+              <Input id="name" v-model="newProvider.providerName" required />
+            </div>
+            <div class="space-y-2">
+              <Label for="email">Email</Label>
+              <Input id="email" type="email" v-model="newProvider.providerEmail" required />
+            </div>
+            <div class="space-y-2">
+              <Label for="phoneNumber">Phone Number</Label>
+              <Input id="phoneNumber" v-model="newProvider.providerPhoneNumber" required />
+            </div>
+            <div class="space-y-2">
+              <Label for="address">Address</Label>
+              <Textarea id="address" v-model="newProvider.providerAddress" />
+            </div>
+            <div class="space-y-2">
+              <Label for="status">Status</Label>
+              <Select v-model="newProvider.providerStatus">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select provider status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div v-if="newProvider.providerStatus === 'Custom'" class="space-y-2">
+              <Label for="customStatus">Custom Status</Label>
+              <Input id="customStatus" v-model="customStatus" required />
+            </div>
+            <div class="space-y-2">
+              <Label for="description">Description</Label>
+              <Textarea id="description" v-model="newProvider.providerDescription" />
+            </div>
+            <DialogFooter>
+              <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Provider</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
       </ScrollArea>
     </Dialog>
 
@@ -425,35 +357,19 @@ watch([searchQuery], () => {
         <form @submit.prevent="editProvider" class="space-y-4">
           <div class="space-y-2">
             <Label for="edit-name">Name</Label>
-            <Input
-              id="edit-name"
-              v-model="currentProvider.providerName"
-              required
-            />
+            <Input id="edit-name" v-model="currentProvider.providerName" required />
           </div>
           <div class="space-y-2">
             <Label for="edit-email">Email</Label>
-            <Input
-              id="edit-email"
-              type="email"
-              v-model="currentProvider.providerEmail"
-              required
-            />
+            <Input id="edit-email" type="email" v-model="currentProvider.providerEmail" required />
           </div>
           <div class="space-y-2">
             <Label for="edit-phoneNumber">Phone Number</Label>
-            <Input
-              id="edit-phoneNumber"
-              v-model="currentProvider.providerPhoneNumber"
-              required
-            />
+            <Input id="edit-phoneNumber" v-model="currentProvider.providerPhoneNumber" required />
           </div>
           <div class="space-y-2">
             <Label for="edit-address">Address</Label>
-            <Textarea
-              id="edit-address"
-              v-model="currentProvider.providerAddress"
-            />
+            <Textarea id="edit-address" v-model="currentProvider.providerAddress" />
           </div>
           <div class="space-y-2">
             <Label for="edit-status">Status</Label>
@@ -468,20 +384,15 @@ watch([searchQuery], () => {
               </SelectContent>
             </Select>
           </div>
-          <div v-if="!statusOptions.some(option => option.value === currentProvider.providerStatus) || currentProvider.providerStatus === 'Custom'" class="space-y-2">
+          <div
+            v-if="!statusOptions.some(option => option.value === currentProvider.providerStatus) || currentProvider.providerStatus === 'Custom'"
+            class="space-y-2">
             <Label for="edit-customStatus">Custom Status</Label>
-            <Input
-              id="edit-customStatus"
-              v-model="currentProvider.providerStatus"
-              required
-            />
+            <Input id="edit-customStatus" v-model="currentProvider.providerStatus" required />
           </div>
           <div class="space-y-2">
             <Label for="edit-description">Description</Label>
-            <Textarea
-              id="edit-description"
-              v-model="currentProvider.providerDescription"
-            />
+            <Textarea id="edit-description" v-model="currentProvider.providerDescription" />
           </div>
           <DialogFooter>
             <Button type="submit">Save Changes</Button>

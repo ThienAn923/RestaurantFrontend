@@ -11,13 +11,26 @@ const axiosInstance = axios.create({
 });
 
 // Optional: Add an interceptor for requests
+// axiosInstance.interceptors.request.use(
+//   (config) => {
+//     // You can modify the request here, e.g., add an authorization token
+//     // const token = localStorage.getItem('token');
+//     // if (token) {
+//     //   config.headers.Authorization = `Bearer ${token}`;
+//     // }
+//     return config;
+//   },
+//   (error) => {
+//     return Promise.reject(error);
+//   }
+// );
+
 axiosInstance.interceptors.request.use(
   (config) => {
-    // You can modify the request here, e.g., add an authorization token
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -33,6 +46,8 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+
 
 export default axiosInstance;
 

@@ -117,38 +117,34 @@ watch([searchQuery], () => {
 <template>
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold">Ingredients</h1>
+      <h1 class="text-3xl font-bold">Nguyên Liệu</h1>
       <div class="space-x-2">
         <Button @click="isAddIngredientModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
-          <PlusIcon class="mr-2 h-4 w-4" /> Add Ingredient
+          <PlusIcon class="mr-2 h-4 w-4" /> Thêm Nguyên Liệu
         </Button>
         <Button @click="isAddIngredientTypeModalOpen = true" size="sm" variant="outline">
-          <PlusIcon class="mr-2 h-4 w-4" /> Add Ingredient Type
+          <PlusIcon class="mr-2 h-4 w-4" /> Thêm Loại Nguyên Liệu
         </Button>
       </div>
     </div>
 
     <div class="mb-4 flex space-x-4">
       <div class="relative flex-grow">
-        <Input
-          v-model="searchQuery"
-          placeholder="Tìm kiếm theo tên"
-          class="pl-10"
-        />
+        <Input v-model="searchQuery" placeholder="Tìm kiếm theo tên" class="pl-10" />
         <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
       </div>
       <Select v-model="filterStatus">
         <SelectTrigger class="w-[200px]">
-          <SelectValue placeholder="Filter by status" />
+          <SelectValue placeholder="Lọc Bằng Loại Nguyên Liệu" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value = "AllTypes">All Types</SelectItem>
+          <SelectItem value="AllTypes">Tất Cả Loại</SelectItem>
           <SelectItem v-for="type in ingredientStore.ingredientTypes" :key="type.id" :value="type.id">
             {{ type.ingredientTypeName }}
           </SelectItem>
         </SelectContent>
       </Select>
-      <Button @click="resetFilters" variant="outline">Reset Filters</Button>
+      <Button @click="resetFilters" variant="outline">Reset Bộ Lọc </Button>
     </div>
 
 
@@ -156,34 +152,25 @@ watch([searchQuery], () => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead class="w-3/6 cursor-pointer" @click="sortTable('ingredientName')" >
+            <TableHead class="w-3/6 cursor-pointer" @click="sortTable('ingredientName')">
               <div class="flex items-center justify-between">
                 <span>Name</span>
-                <component 
-                  :is="getSortIcon('ingredientName') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('ingredientName')}"
-                />
+                <component :is="getSortIcon('ingredientName') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('ingredientName') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('ingredientType')" class="cursor-pointer w-1/6">
               <div class="flex items-center justify-between">
                 <span>Type</span>
-                <component 
-                  :is="getSortIcon('ingredientType') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('ingredientType')}"
-                />
+                <component :is="getSortIcon('ingredientType') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('ingredientType') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('createAt')" class="cursor-pointer">
               <div class="flex items-center justify-between">
                 <span>Created At</span>
-                <component 
-                  :is="getSortIcon('createAt') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('createAt')}"
-                />
+                <component :is="getSortIcon('createAt') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('createAt') }" />
               </div>
             </TableHead>
             <TableHead class="text-right"></TableHead>
@@ -196,20 +183,12 @@ watch([searchQuery], () => {
             <TableCell>{{ new Date(ingredient.createAt).toLocaleString() }}</TableCell>
             <TableCell class="text-right">
 
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="openEditModal(ingredient)"
-                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100"
-              >
+              <Button variant="ghost" size="icon" @click="openEditModal(ingredient)"
+                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="deleteIngredient(ingredient.id)"
-                class="text-red-500 hover:text-white hover:bg-red-500"
-              >
+              <Button variant="ghost" size="icon" @click="deleteIngredient(ingredient.id)"
+                class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
             </TableCell>
@@ -221,36 +200,22 @@ watch([searchQuery], () => {
     <!-- Pagination -->
     <div class="mt-4 flex items-center justify-between">
       <div class="text-sm text-gray-700">
-        Showing {{ (ingredientStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(ingredientStore.currentPage * 5, ingredientStore.totalItems) }} of {{ ingredientStore.totalItems }} entries
+        Showing {{ (ingredientStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(ingredientStore.currentPage * 5,
+          ingredientStore.totalItems) }} of {{ ingredientStore.totalItems }} entries
       </div>
       <div class="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(ingredientStore.currentPage - 1)"
-          :disabled="ingredientStore.currentPage === 1"
-          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+        <Button variant="outline" size="sm" @click="goToPage(ingredientStore.currentPage - 1)"
+          :disabled="ingredientStore.currentPage === 1" class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
-        <Button
-          v-for="page in pageNumbers"
-          :key="page"
-          variant="outline"
-          size="sm"
+        <Button v-for="page in pageNumbers" :key="page" variant="outline" size="sm"
           :class="{ 'bg-blue-500 text-white': page === ingredientStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== ingredientStore.currentPage }"
-          @click="typeof page === 'number' ? goToPage(page) : null"
-          :disabled="typeof page !== 'number'"
-        >
+          @click="typeof page === 'number' ? goToPage(page) : null" :disabled="typeof page !== 'number'">
           {{ page }}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(ingredientStore.currentPage + 1)"
+        <Button variant="outline" size="sm" @click="goToPage(ingredientStore.currentPage + 1)"
           :disabled="ingredientStore.currentPage === ingredientStore.totalPages"
-           class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
       </div>
@@ -268,11 +233,7 @@ watch([searchQuery], () => {
         <form @submit.prevent="addIngredient" class="space-y-4">
           <div class="space-y-2">
             <Label for="name">Name</Label>
-            <Input
-              id="name"
-              v-model="newIngredient.ingredientName"
-              required
-            />
+            <Input id="name" v-model="newIngredient.ingredientName" required />
           </div>
           <div class="space-y-2">
             <Label for="type">Type</Label>
@@ -306,11 +267,7 @@ watch([searchQuery], () => {
         <form @submit.prevent="editIngredient" class="space-y-4">
           <div class="space-y-2">
             <Label for="edit-name">Name</Label>
-            <Input
-              id="edit-name"
-              v-model="currentIngredient.ingredientName"
-              required
-            />
+            <Input id="edit-name" v-model="currentIngredient.ingredientName" required />
           </div>
           <div class="space-y-2">
             <Label for="edit-type">Type</Label>
@@ -344,19 +301,11 @@ watch([searchQuery], () => {
         <form @submit.prevent="addIngredientType" class="space-y-4">
           <div class="space-y-2">
             <Label for="type-name">Name</Label>
-            <Input
-              id="type-name"
-              v-model="newIngredientType.ingredientTypeName"
-              required
-            />
+            <Input id="type-name" v-model="newIngredientType.ingredientTypeName" required />
           </div>
           <div class="space-y-2">
             <Label for="type-description">Description</Label>
-            <Input
-              id="type-description"
-              v-model="newIngredientType.ingredientTypeDescription"
-              required
-            />
+            <Input id="type-description" v-model="newIngredientType.ingredientTypeDescription" required />
           </div>
           <DialogFooter>
             <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Ingredient Type</Button>

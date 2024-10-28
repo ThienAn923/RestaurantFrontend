@@ -8,15 +8,15 @@ const router = useRouter();
 
 
 const login = async () => {
-    try{
-        const response = await axios.post('http://localhost:3000/login', {
-            username: username.value,
-            password: password.value
-        });
-        router.push('/table');
-    }catch(err){
-        console.log(err);
-    }
+  try {
+    const response = await axios.post('http://localhost:3000/login', {
+      username: username.value,
+      password: password.value
+    });
+    router.push('/table');
+  } catch (err) {
+    console.log(err);
+  }
 }
 </script>
 
@@ -35,20 +35,12 @@ const login = async () => {
         <div class="grid gap-4">
           <div class="grid gap-2">
             <Label for="username">Username</Label>
-            <Input
-              id="username"
-              type="username"
-              placeholder="abcdefgh"
-              required
-            />
+            <Input id="username" type="username" placeholder="abcdefgh" required />
           </div>
           <div class="grid gap-2">
             <div class="flex items-center">
               <Label for="password">Password</Label>
-              <a
-                href="/forgot-password"
-                class="ml-auto inline-block text-sm underline"
-              >
+              <a href="/forgot-password" class="ml-auto inline-block text-sm underline">
                 Forgot your password?
               </a>
             </div>
@@ -70,13 +62,8 @@ const login = async () => {
       </div>
     </div>
     <div class="hidden bg-muted lg:block">
-      <img
-        src="../images/pikachu.svg"
-        alt="Image"
-        width="1920"
-        height="1080"
-        class="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-      >
+      <img src="../images/pikachu.svg" alt="Image" width="1920" height="1080"
+        class="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale">
     </div>
   </div>
 </template>
