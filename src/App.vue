@@ -14,8 +14,11 @@ import Table from './components/UserTable.vue'
   <div class="h-screen flex justify-center align-middle">
     <router-view />
   </div>
+  <Toaster />
 </template>
 
 <script setup lang="ts">
 // No need to import the components here as they are handled by the router
+import Toaster from '@/components/ui/toast/Toaster.vue'
+
 </script>

@@ -154,21 +154,21 @@ watch([searchQuery], () => {
           <TableRow>
             <TableHead class="w-3/6 cursor-pointer" @click="sortTable('ingredientName')">
               <div class="flex items-center justify-between">
-                <span>Name</span>
+                <span>Tên Nguyên Liệu</span>
                 <component :is="getSortIcon('ingredientName') || 'div'" class="w-4 h-4 ml-2"
                   :class="{ 'text-transparent': !getSortIcon('ingredientName') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('ingredientType')" class="cursor-pointer w-1/6">
               <div class="flex items-center justify-between">
-                <span>Type</span>
+                <span>Loại Nguyên Liệu</span>
                 <component :is="getSortIcon('ingredientType') || 'div'" class="w-4 h-4 ml-2"
                   :class="{ 'text-transparent': !getSortIcon('ingredientType') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('createAt')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Created At</span>
+                <span>Ngày Tạo</span>
                 <component :is="getSortIcon('createAt') || 'div'" class="w-4 h-4 ml-2"
                   :class="{ 'text-transparent': !getSortIcon('createAt') }" />
               </div>

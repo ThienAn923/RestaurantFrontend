@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed,watch } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { PlusIcon, PencilIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, InfoIcon, ChevronUpIcon, ChevronDownIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -123,22 +123,18 @@ watch([searchQuery], () => {
 <template>
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold">Position</h1>
+      <h1 class="text-3xl font-bold">Chức Vụ</h1>
       <Button @click="isAddModalOpen = true" class="bg-blue-500 hover:bg-blue-600 text-white">
-        <PlusIcon class="mr-2 h-4 w-4" /> Add Position
+        <PlusIcon class="mr-2 h-4 w-4" /> Thêm Chức Vụ
       </Button>
     </div>
 
     <div class="mb-4 flex space-x-4">
       <div class="relative flex-grow">
-        <Input
-          v-model="searchQuery"
-          placeholder="Tìm kiếm theo tên"
-          class="pl-10"
-        />
+        <Input v-model="searchQuery" placeholder="Tìm kiếm theo tên" class="pl-10" />
         <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
       </div>
-      <Button @click="resetFilters" variant="outline">Reset Filters</Button>
+      <Button @click="resetFilters" variant="outline">Reset Bộ Lọc</Button>
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -147,35 +143,26 @@ watch([searchQuery], () => {
           <TableRow>
             <TableHead @click="sortTable('positionName')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Name</span>
-                <component 
-                  :is="getSortIcon('positionName') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('positionName')}"
-                />
+                <span>Tên Chức Vụ</span>
+                <component :is="getSortIcon('positionName') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('positionName') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('totalEmployee')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Total Employees</span>
-                <component 
-                  :is="getSortIcon('totalEmployee') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('totalEmployee')}"
-                />
+                <span>Tổng Số Nhân Viên</span>
+                <component :is="getSortIcon('totalEmployee') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('totalEmployee') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('createAt')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Created At</span>
-                <component 
-                  :is="getSortIcon('createAt') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('createAt')}"
-                />
+                <span>Ngày Tạo</span>
+                <component :is="getSortIcon('createAt') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('createAt') }" />
               </div>
             </TableHead>
-            <TableHead class="text-right">Actions</TableHead>
+            <TableHead class="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -184,28 +171,16 @@ watch([searchQuery], () => {
             <TableCell>{{ position.totalEmployee }}</TableCell>
             <TableCell>{{ new Date(position.createAt).toLocaleString() }}</TableCell>
             <TableCell class="text-right">
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="openInfoModal(position)"
-                class="text-blue-500 hover:text-blue-600 hover:bg-blue-100"
-              >
+              <Button variant="ghost" size="icon" @click="openInfoModal(position)"
+                class="text-blue-500 hover:text-blue-600 hover:bg-blue-100">
                 <InfoIcon class="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="openEditModal(position)"
-                class="text-blue-500 hover:text-blue-600 hover:bg-blue-100"
-              >
+              <Button variant="ghost" size="icon" @click="openEditModal(position)"
+                class="text-blue-500 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="deletePosition(position.id)"
-                class="text-red-500 hover:text-white hover:bg-red-500"
-              >
+              <Button variant="ghost" size="icon" @click="deletePosition(position.id)"
+                class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
             </TableCell>
@@ -217,36 +192,22 @@ watch([searchQuery], () => {
     <!-- Pagination -->
     <div class="mt-4 flex items-center justify-between">
       <div class="text-sm text-gray-700">
-        Showing {{ (positionStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(positionStore.currentPage * 5, positionStore.totalItems) }} of {{ positionStore.totalItems }} entries
+        Showing {{ (positionStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(positionStore.currentPage * 5,
+          positionStore.totalItems) }} of {{ positionStore.totalItems }} entries
       </div>
       <div class="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(positionStore.currentPage - 1)"
-          :disabled="positionStore.currentPage === 1"
-          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+        <Button variant="outline" size="sm" @click="goToPage(positionStore.currentPage - 1)"
+          :disabled="positionStore.currentPage === 1" class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
-        <Button
-          v-for="page in pageNumbers"
-          :key="page"
-          variant="outline"
-          size="sm"
+        <Button v-for="page in pageNumbers" :key="page" variant="outline" size="sm"
           :class="{ 'bg-blue-500 text-white': page === positionStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== positionStore.currentPage }"
-          @click="typeof page === 'number' ? goToPage(page) : null"
-          :disabled="typeof page !== 'number'"
-        >
+          @click="typeof page === 'number' ? goToPage(page) : null" :disabled="typeof page !== 'number'">
           {{ page }}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(positionStore.currentPage + 1)"
+        <Button variant="outline" size="sm" @click="goToPage(positionStore.currentPage + 1)"
           :disabled="positionStore.currentPage === positionStore.totalPages"
-          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
       </div>
@@ -264,18 +225,11 @@ watch([searchQuery], () => {
         <form @submit.prevent="addPosition" class="space-y-4">
           <div class="space-y-2">
             <Label for="name">Name</Label>
-            <Input
-              id="name"
-              v-model="newPosition.positionName"
-              required
-            />
+            <Input id="name" v-model="newPosition.positionName" required />
           </div>
           <div class="space-y-2">
             <Label for="description">Description</Label>
-            <Textarea
-              id="description"
-              v-model="newPosition.positionDescription"
-            />
+            <Textarea id="description" v-model="newPosition.positionDescription" />
           </div>
           <DialogFooter>
             <Button type="submit">Add Position</Button>
@@ -296,18 +250,11 @@ watch([searchQuery], () => {
         <form @submit.prevent="editPosition" class="space-y-4">
           <div class="space-y-2">
             <Label for="edit-name">Name</Label>
-            <Input
-              id="edit-name"
-              v-model="currentPosition.positionName"
-              required
-            />
+            <Input id="edit-name" v-model="currentPosition.positionName" required />
           </div>
           <div class="space-y-2">
             <Label for="edit-description">Description</Label>
-            <Textarea
-              id="edit-description"
-              v-model="currentPosition.positionDescription"
-            />
+            <Textarea id="edit-description" v-model="currentPosition.positionDescription" />
           </div>
           <DialogFooter>
             <Button type="submit">Save Changes</Button>

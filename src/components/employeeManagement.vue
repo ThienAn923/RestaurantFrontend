@@ -16,7 +16,7 @@ const isAddEmployeeModalOpen = ref(false)
 const isEditEmployeeModalOpen = ref(false)
 const isAccountCreatedModalOpen = ref(false)
 const currentEmployee = ref({ name: '', employeeAdress: '', employeeGender: true, employeeDateOfBirth: '', departmentId: '', positionId: '' })
-const newEmployee = ref({ name: '', employeeAdress: '', employeeGender: true, employeeDateOfBirth: '', departmentId: '', positionId: '', createAccount: false, StartDay: '', AccountAuthority: 1})
+const newEmployee = ref({ name: '', employeeAdress: '', employeeGender: true, employeeDateOfBirth: '', departmentId: '', positionId: '', createAccount: false, StartDay: '', AccountAuthority: 1 })
 const createdAccount = ref({ username: '', password: '' })
 
 onMounted(async () => {
@@ -25,11 +25,11 @@ onMounted(async () => {
   await employeeStore.fetchPositions()
   console.log(employeeStore.departments)
   employeeStore.employees.forEach(emp => {
-  emp.Work.forEach(work => {
-    emp.position = work.Position.positionName
-    emp.department = work.Department.departmentName// Truy cập vào departmentName
+    emp.Work.forEach(work => {
+      emp.position = work.Position.positionName
+      emp.department = work.Department.departmentName// Truy cập vào departmentName
+    })
   })
-})
 })
 
 const addEmployee = async () => {
@@ -43,16 +43,16 @@ const addEmployee = async () => {
   }
   await employeeStore.fetchEmployees(employeeStore.currentPage)
   employeeStore.employees.forEach(emp => {
-  emp.Work.forEach(work => {
-    emp.position = work.Position.positionName
-    emp.department = work.Department.departmentName// Truy cập vào departmentName
+    emp.Work.forEach(work => {
+      emp.position = work.Position.positionName
+      emp.department = work.Department.departmentName// Truy cập vào departmentName
+    })
   })
-})
-  newEmployee.value = { name: '', employeeAdress: '', employeeGender: true, employeeDateOfBirth: '', departmentId: '', positionId: '', createAccount: false, StartDay: '', AccountAuthority: 1}
+  newEmployee.value = { name: '', employeeAdress: '', employeeGender: true, employeeDateOfBirth: '', departmentId: '', positionId: '', createAccount: false, StartDay: '', AccountAuthority: 1 }
 }
 
 const openEditModal = (employee: any) => {
-    currentEmployee.value = { ...employee }
+  currentEmployee.value = { ...employee }
   isEditEmployeeModalOpen.value = true
 }
 
@@ -100,10 +100,10 @@ const goToPage = (page: number) => {
 <template>
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold">Employees</h1>
+      <h1 class="text-3xl font-bold">Quản Lý Nhân Viên</h1>
       <div class="space-x-2">
-        <Button @click="isAddEmployeeModalOpen = true" size="sm">
-          <PlusIcon class="mr-2 h-4 w-4" /> Add Employee
+        <Button @click="isAddEmployeeModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
+          <PlusIcon class="mr-2 h-4 w-4" /> Thêm Nhân Viên
         </Button>
       </div>
     </div>
@@ -112,36 +112,28 @@ const goToPage = (page: number) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Address</TableHead>
-            <TableHead>Gender</TableHead>
-            <TableHead>Date of Birth</TableHead>
-            <TableHead>Department</TableHead>
-            <TableHead>Position</TableHead>
+            <TableHead>Tên</TableHead>
+            <TableHead>Địa Chỉ</TableHead>
+            <TableHead>Giới Tính</TableHead>
+            <TableHead>Ngày Sinh</TableHead>
+            <TableHead>Phòng Ban</TableHead>
+            <TableHead>Chức Vụ</TableHead>
             <TableHead class="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-for="employee in employeeStore.employees" :key="employee.id">
             <TableCell class="font-medium">{{ employee.person.name }}</TableCell>
-            <TableCell class="w-2/6">{{ employee.employeeAdress  }}</TableCell>
-            <TableCell>{{ employee.employeeGender ? 'Male' : 'Female' }}</TableCell>
+            <TableCell class="w-2/6">{{ employee.employeeAdress }}</TableCell>
+            <TableCell>{{ employee.employeeGender ? 'Nam' : 'Nữ' }}</TableCell>
             <TableCell>{{ formatDate(employee.employeeDateOfBirth) }}</TableCell>
             <TableCell>{{ employee.department }}</TableCell>
             <TableCell>{{ employee.position }}</TableCell>
             <TableCell class="text-right">
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="openEditModal(employee)"
-              >
+              <Button variant="ghost" size="icon" @click="openEditModal(employee)">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="deleteEmployee(employee.id)"
-              >
+              <Button variant="ghost" size="icon" @click="deleteEmployee(employee.id)">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
             </TableCell>
@@ -153,34 +145,24 @@ const goToPage = (page: number) => {
     <!-- Pagination -->
     <div class="mt-4 flex items-center justify-between">
       <div class="text-sm text-gray-700">
-        Showing {{ (employeeStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(employeeStore.currentPage * 5, employeeStore.totalItems) }} of {{ employeeStore.totalItems }} entries
+        Showing {{ (employeeStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(employeeStore.currentPage * 5,
+          employeeStore.totalItems) }} of {{ employeeStore.totalItems }} entries
       </div>
       <div class="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(employeeStore.currentPage - 1)"
-          :disabled="employeeStore.currentPage === 1"
-        >
-          <ChevronLeftIcon class="h-4 w-4" />
+        <Button variant="outline" size="sm" @click="goToPage(employeeStore.currentPage - 1)"
+          :disabled="employeeStore.currentPage === 1" class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
+
+          <ChevronLeftIcon class="h-4 w-4 " />
+
         </Button>
-        <Button
-          v-for="page in pageNumbers"
-          :key="page"
-          variant="outline"
-          size="sm"
-          :class="{ 'bg-primary text-primary-foreground': page === employeeStore.currentPage }"
-          @click="typeof page === 'number' ? goToPage(page) : null"
-          :disabled="typeof page !== 'number'"
-        >
+        <Button v-for="page in pageNumbers" :key="page" variant="outline" size="sm"
+          :class="{ 'bg-blue-500 text-white': page === employeeStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== employeeStore.currentPage }"
+          @click="typeof page === 'number' ? goToPage(page) : null" :disabled="typeof page !== 'number'">
           {{ page }}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(employeeStore.currentPage + 1)"
+        <Button variant="outline" size="sm" @click="goToPage(employeeStore.currentPage + 1)"
           :disabled="employeeStore.currentPage === employeeStore.totalPages"
-        >
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
       </div>
@@ -198,19 +180,11 @@ const goToPage = (page: number) => {
         <form @submit.prevent="addEmployee" class="space-y-4">
           <div class="space-y-2">
             <Label for="name">Name</Label>
-            <Input
-              id="name"
-              v-model="newEmployee.name"
-              required
-            />
+            <Input id="name" v-model="newEmployee.name" required />
           </div>
           <div class="space-y-2">
             <Label for="address">Address</Label>
-            <Input
-              id="address"
-              v-model="newEmployee.employeeAdress"
-              required
-            />
+            <Input id="address" v-model="newEmployee.employeeAdress" required />
           </div>
           <div class="space-y-2">
             <Label for="gender">Gender</Label>
@@ -226,12 +200,7 @@ const goToPage = (page: number) => {
           </div>
           <div class="space-y-2">
             <Label for="dob">Date of Birth</Label>
-            <Input
-              id="dob"
-              type="date"
-              v-model="newEmployee.employeeDateOfBirth"
-              required
-            />
+            <Input id="dob" type="date" v-model="newEmployee.employeeDateOfBirth" required />
           </div>
           <div class="space-y-2">
             <Label for="department">Department</Label>
@@ -282,19 +251,11 @@ const goToPage = (page: number) => {
         <form @submit.prevent="editEmployee" class="space-y-4">
           <div class="space-y-2">
             <Label for="edit-name">Name</Label>
-            <Input
-              id="edit-name"
-              v-model="currentEmployee.name"
-              required
-            />
+            <Input id="edit-name" v-model="currentEmployee.name" required />
           </div>
           <div class="space-y-2">
             <Label for="edit-address">Address</Label>
-            <Input
-              id="edit-address"
-              v-model="currentEmployee.employeeAdress"
-              required
-            />
+            <Input id="edit-address" v-model="currentEmployee.employeeAdress" required />
           </div>
           <div class="space-y-2">
             <Label for="edit-gender">Gender</Label>
@@ -310,12 +271,7 @@ const goToPage = (page: number) => {
           </div>
           <div class="space-y-2">
             <Label for="edit-dob">Date of Birth</Label>
-            <Input
-              id="edit-dob"
-              type="date"
-              v-model="currentEmployee.employeeDateOfBirth"
-              required
-            />
+            <Input id="edit-dob" type="date" v-model="currentEmployee.employeeDateOfBirth" required />
           </div>
           <div class="space-y-2">
             <Label for="edit-department">Department</Label>

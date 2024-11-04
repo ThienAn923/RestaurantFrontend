@@ -5,6 +5,6 @@ import DepartmentManagement from './DepartmentManagement.vue'
 
 <template>
   <AppLayout>
-    <DepartmentManagement/>
+    <DepartmentManagement />
   </AppLayout>
 </template>

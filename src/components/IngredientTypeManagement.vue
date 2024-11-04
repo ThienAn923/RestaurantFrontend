@@ -99,22 +99,18 @@ const goToPage = (page: number) => {
 <template>
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold">IngredientType</h1>
+      <h1 class="text-3xl font-bold">Quản Lý Loại Nguyên Liệu</h1>
       <Button @click="isAddModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
-        <PlusIcon class="mr-2 h-4 w-4" /> Add IngredientType
+        <PlusIcon class="mr-2 h-4 w-4" /> Thêm Loại Nguyên Liệu
       </Button>
     </div>
 
     <div class="mb-4 flex space-x-4">
       <div class="relative flex-grow">
-        <Input
-          v-model="searchQuery"
-          placeholder="Tìm kiếm theo tên"
-          class="pl-10"
-        />
+        <Input v-model="searchQuery" placeholder="Tìm kiếm theo tên" class="pl-10" />
         <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
       </div>
-      <Button @click="resetFilters" variant="outline">Reset Filters</Button>
+      <Button @click="resetFilters" variant="outline">Reset Bộ Lọc</Button>
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -123,32 +119,23 @@ const goToPage = (page: number) => {
           <TableRow>
             <TableHead @click="sortTable('providerName')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Name</span>
-                <component 
-                  :is="getSortIcon('ingredientTypeName') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('ingredientTypeName')}"
-                />
+                <span>Tên Loại Nguyên Liệu</span>
+                <component :is="getSortIcon('ingredientTypeName') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('ingredientTypeName') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('ingredientTypeDescription')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Email</span>
-                <component 
-                  :is="getSortIcon('ingredientTypeDescription') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('ingredientTypeDescription')}"
-                />
+                <span>Địa Chỉ Mail</span>
+                <component :is="getSortIcon('ingredientTypeDescription') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('ingredientTypeDescription') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('providerName')" class="cursor-pointer">
-            <div class="flex items-center justify-between">
-                <span>Created At</span>
-                <component 
-                  :is="getSortIcon('createAt') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('createAt')}"
-                />
+              <div class="flex items-center justify-between">
+                <span>Ngày Tạo</span>
+                <component :is="getSortIcon('createAt') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('createAt') }" />
               </div>
             </TableHead>
             <TableHead class="text-right"></TableHead>
@@ -157,23 +144,15 @@ const goToPage = (page: number) => {
         <TableBody>
           <TableRow v-for="ingredientType in IngredientTypeStore.ingredientTypes" :key="ingredientType.id">
             <TableCell class="font-medium">{{ ingredientType.ingredientTypeName }}</TableCell>
-            <TableCell class = "w-3/6">{{ ingredientType.ingredientTypeDescription }}</TableCell>
-            <TableCell>{{ new Date(ingredientType.createAt).toLocaleString()}}</TableCell>
+            <TableCell class="w-3/6">{{ ingredientType.ingredientTypeDescription }}</TableCell>
+            <TableCell>{{ new Date(ingredientType.createAt).toLocaleString() }}</TableCell>
             <TableCell class="text-right">
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="openEditModal(ingredientType)"
-                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100"
-              >
+              <Button variant="ghost" size="icon" @click="openEditModal(ingredientType)"
+                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="deleteIngredientType(ingredientType.id)"
-                class="text-red-500 hover:text-white hover:bg-red-500"
-              >
+              <Button variant="ghost" size="icon" @click="deleteIngredientType(ingredientType.id)"
+                class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
             </TableCell>
@@ -185,36 +164,22 @@ const goToPage = (page: number) => {
     <!-- Pagination -->
     <div class="mt-4 flex items-center justify-between">
       <div class="text-sm text-gray-700">
-        Showing {{ (IngredientTypeStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(IngredientTypeStore.currentPage * 5, IngredientTypeStore.totalItems) }} of {{ IngredientTypeStore.totalItems }} entries
+        Showing {{ (IngredientTypeStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(IngredientTypeStore.currentPage * 5,
+          IngredientTypeStore.totalItems) }} of {{ IngredientTypeStore.totalItems }} entries
       </div>
       <div class="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(IngredientTypeStore.currentPage - 1)"
-          :disabled="IngredientTypeStore.currentPage === 1"
-          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+        <Button variant="outline" size="sm" @click="goToPage(IngredientTypeStore.currentPage - 1)"
+          :disabled="IngredientTypeStore.currentPage === 1" class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
-        <Button
-          v-for="page in pageNumbers"
-          :key="page"
-          variant="outline"
-          size="sm"
+        <Button v-for="page in pageNumbers" :key="page" variant="outline" size="sm"
           :class="{ 'bg-blue-500 text-white': page === IngredientTypeStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== IngredientTypeStore.currentPage }"
-          @click="typeof page === 'number' ? goToPage(page) : null"
-          :disabled="typeof page !== 'number'"
-        >
+          @click="typeof page === 'number' ? goToPage(page) : null" :disabled="typeof page !== 'number'">
           {{ page }}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(IngredientTypeStore.currentPage + 1)"
+        <Button variant="outline" size="sm" @click="goToPage(IngredientTypeStore.currentPage + 1)"
           :disabled="IngredientTypeStore.currentPage === IngredientTypeStore.totalPages"
-          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
       </div>
@@ -231,19 +196,11 @@ const goToPage = (page: number) => {
         <form @submit.prevent="addIngredientType" class="space-y-4">
           <div class="space-y-2">
             <Label for="name">Name</Label>
-            <Input
-              id="name"
-              v-model="newIngredientType.ingredientTypeName"
-              required
-            />
+            <Input id="name" v-model="newIngredientType.ingredientTypeName" required />
           </div>
           <div class="space-y-2">
             <Label for="description">Description</Label>
-            <Textarea
-              id="description"
-              v-model="newIngredientType.ingredientTypeDescription"
-              required
-            />
+            <Textarea id="description" v-model="newIngredientType.ingredientTypeDescription" required />
           </div>
           <DialogFooter>
             <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add IngredientType</Button>
@@ -263,19 +220,11 @@ const goToPage = (page: number) => {
         <form @submit.prevent="editIngredientType" class="space-y-4">
           <div class="space-y-2">
             <Label for="edit-name">Name</Label>
-            <Input
-              id="edit-name"
-              v-model="currentIngredientType.ingredientTypeName"
-              required
-            />
+            <Input id="edit-name" v-model="currentIngredientType.ingredientTypeName" required />
           </div>
           <div class="space-y-2">
             <Label for="edit-description">Description</Label>
-            <Textarea
-              id="edit-description"
-              v-model="currentIngredientType.ingredientTypeDescription"
-              required
-            />
+            <Textarea id="edit-description" v-model="currentIngredientType.ingredientTypeDescription" required />
           </div>
           <DialogFooter>
             <Button type="submit">Save Changes</Button>

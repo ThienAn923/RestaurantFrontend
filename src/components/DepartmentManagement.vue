@@ -48,8 +48,8 @@ const addDepartment = async () => {
   }
 }
 
-const findHeadOfDepartment = async () =>{
-  
+const findHeadOfDepartment = async () => {
+
 }
 
 const openEditModal = (department: typeof currentDepartment.value) => {
@@ -131,22 +131,18 @@ watch([searchQuery], () => {
 <template>
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold">Department</h1>
+      <h1 class="text-3xl font-bold">Quản Lý Bộ Phận</h1>
       <Button @click="isAddModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
-        <PlusIcon class="mr-2 h-4 w-4" /> Add Department
+        <PlusIcon class="mr-2 h-4 w-4" /> Thêm Bộ Phần
       </Button>
     </div>
 
     <div class="mb-4 flex space-x-4">
       <div class="relative flex-grow">
-        <Input
-          v-model="searchQuery"
-          placeholder="Tìm kiếm theo tên"
-          class="pl-10"
-        />
+        <Input v-model="searchQuery" placeholder="Tìm kiếm theo tên" class="pl-10" />
         <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
       </div>
-      <Button @click="resetFilters" variant="outline">Reset Filters</Button>
+      <Button @click="resetFilters" variant="outline">Reset Bộ Lọc</Button>
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -155,80 +151,56 @@ watch([searchQuery], () => {
           <TableRow>
             <TableHead @click="sortTable('departmentName')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Name</span>
-                <component 
-                  :is="getSortIcon('departmentName') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('departmentName')}"
-                />
+                <span>Tên Bộ Phận</span>
+                <component :is="getSortIcon('departmentName') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('departmentName') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('totalEmployee')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Total Employees</span>
-                <component 
-                  :is="getSortIcon('totalEmployee') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('totalEmployee')}"
-                />
+                <span>Tổng Số Nhân Viên</span>
+                <component :is="getSortIcon('totalEmployee') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('totalEmployee') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('headOfDepartment')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Head of Department</span>
-                <component 
-                  :is="getSortIcon('headOfDepartment') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('headOfDepartment')}"
-                />
+                <span>Trưởng Bộ Phận</span>
+                <component :is="getSortIcon('headOfDepartment') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('headOfDepartment') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('createAt')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Created At</span>
-                <component 
-                  :is="getSortIcon('createAt') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('createAt')}"
-                />
+                <span>Ngày Tạo</span>
+                <component :is="getSortIcon('createAt') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('createAt') }" />
               </div>
             </TableHead>
-            <TableHead class="text-right">Actions</TableHead>
+            <TableHead class="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-for="department in departmentStore.departments" :key="department.id">
             <TableCell class="font-medium">{{ department.departmentName }}</TableCell>
             <TableCell>{{ department.totalEmployee }}</TableCell>
-            
+
             <!-- This is one cell -->
             <TableCell v-if="department.headOfDepartment">{{ department.headOfDepartment.name }}</TableCell>
             <TableCell v-else>No head of department</TableCell>
 
             <TableCell>{{ new Date(department.createAt).toLocaleString() }}</TableCell>
             <TableCell class="text-right">
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="openInfoModal(department)"
-                class="text-gray-600 hover:text-blue-600 hover:bg-blue-100"
-              >
+              <Button variant="ghost" size="icon" @click="openInfoModal(department)"
+                class="text-gray-600 hover:text-blue-600 hover:bg-blue-100">
                 <InfoIcon class="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="openEditModal(department)"
-                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100"
-              >
+              <Button variant="ghost" size="icon" @click="openEditModal(department)"
+                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="deleteDepartment(department.id)"
-                class="text-red-500 hover:text-white hover:bg-red-500"
-              >
+              <Button variant="ghost" size="icon" @click="deleteDepartment(department.id)"
+                class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
             </TableCell>
@@ -240,37 +212,22 @@ watch([searchQuery], () => {
     <!-- Pagination -->
     <div class="mt-4 flex items-center justify-between">
       <div class="text-sm text-gray-700">
-        Showing {{ (departmentStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(departmentStore.currentPage * 5, departmentStore.totalItems) }} of {{ departmentStore.totalItems }} entries
+        Showing {{ (departmentStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(departmentStore.currentPage * 5,
+          departmentStore.totalItems) }} of {{ departmentStore.totalItems }} entries
       </div>
       <div class="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(departmentStore.currentPage - 1)"
-          :disabled="departmentStore.currentPage === 1"
-          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-
-        >
+        <Button variant="outline" size="sm" @click="goToPage(departmentStore.currentPage - 1)"
+          :disabled="departmentStore.currentPage === 1" class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
-        <Button
-          v-for="page in pageNumbers"
-          :key="page"
-          variant="outline"
-          size="sm"
+        <Button v-for="page in pageNumbers" :key="page" variant="outline" size="sm"
           :class="{ 'bg-blue-500 text-white': page === departmentStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== departmentStore.currentPage }"
-          @click="typeof page === 'number' ? goToPage(page) : null"
-          :disabled="typeof page !== 'number'"
-        >
+          @click="typeof page === 'number' ? goToPage(page) : null" :disabled="typeof page !== 'number'">
           {{ page }}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(departmentStore.currentPage + 1)"
+        <Button variant="outline" size="sm" @click="goToPage(departmentStore.currentPage + 1)"
           :disabled="departmentStore.currentPage === departmentStore.totalPages"
-          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
       </div>
@@ -288,25 +245,15 @@ watch([searchQuery], () => {
         <form @submit.prevent="addDepartment" class="space-y-4">
           <div class="space-y-2">
             <Label for="name">Name</Label>
-            <Input
-              id="name"
-              v-model="newDepartment.departmentName"
-              required
-            />
+            <Input id="name" v-model="newDepartment.departmentName" required />
           </div>
           <div class="space-y-2">
             <Label for="description">Description</Label>
-            <Textarea
-              id="description"
-              v-model="newDepartment.departmentDescription"
-            />
+            <Textarea id="description" v-model="newDepartment.departmentDescription" />
           </div>
           <div class="space-y-2">
             <Label for="headOfDepartment">Head of Department</Label>
-            <Input
-              id="headOfDepartment"
-              v-model="newDepartment.headOfDepartment"
-            />
+            <Input id="headOfDepartment" v-model="newDepartment.headOfDepartment" />
           </div>
           <DialogFooter>
             <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Department</Button>
@@ -327,18 +274,11 @@ watch([searchQuery], () => {
         <form @submit.prevent="addDepartment" class="space-y-4">
           <div class="space-y-2">
             <Label for="name">Name</Label>
-            <Input
-              id="name"
-              v-model="newDepartment.departmentName"
-              required
-            />
+            <Input id="name" v-model="newDepartment.departmentName" required />
           </div>
           <div class="space-y-2">
             <Label for="description">Description</Label>
-            <Textarea
-              id="description"
-              v-model="newDepartment.departmentDescription"
-            />
+            <Textarea id="description" v-model="newDepartment.departmentDescription" />
           </div>
           <div class="space-y-2">
             <Label for="headOfDepartment">Head of Department</Label>
@@ -372,25 +312,15 @@ watch([searchQuery], () => {
         <form @submit.prevent="editDepartment" class="space-y-4">
           <div class="space-y-2">
             <Label for="edit-name">Name</Label>
-            <Input
-              id="edit-name"
-              v-model="currentDepartment.departmentName"
-              required
-            />
+            <Input id="edit-name" v-model="currentDepartment.departmentName" required />
           </div>
           <div class="space-y-2">
             <Label for="edit-description">Description</Label>
-            <Textarea
-              id="edit-description"
-              v-model="currentDepartment.departmentDescription"
-            />
+            <Textarea id="edit-description" v-model="currentDepartment.departmentDescription" />
           </div>
           <div class="space-y-2">
             <Label for="edit-headOfDepartment">Head of Department</Label>
-            <Input
-              id="edit-headOfDepartment"
-              v-model="currentDepartment.headOfDepartment"
-            />
+            <Input id="edit-headOfDepartment" v-model="currentDepartment.headOfDepartment" />
           </div>
           <DialogFooter>
             <Button type="submit">Save Changes</Button>

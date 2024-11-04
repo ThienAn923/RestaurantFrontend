@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { format } from 'date-fns';
 import { useInvoiceStore } from './pinia/invoice.store'
+import { formatCurrency } from '../lib/formatMoney'
 
 const invoiceStore = useInvoiceStore()
 
@@ -202,28 +203,34 @@ const formatDate = (dateString: string): string => {
                   :class="{ 'text-transparent': !getSortIcon('invoiceDate') }" />
               </div>
             </TableHead>
-            <TableHead class="cursor-pointer" @click="sortTable('totalCost')">
-              <div class="flex items-center justify-between">
-                <span>Total Cost</span>
+            <TableHead class="cursor-pointer w-1/11" @click="sortTable('totalCost')">
+              <div class="flex items-center justify-end">
+                <span>Tổng Tiền</span>
                 <component :is="getSortIcon('totalCost') || 'div'" class="w-4 h-4 ml-2"
                   :class="{ 'text-transparent': !getSortIcon('totalCost') }" />
               </div>
             </TableHead>
             <TableHead>Ghi chú</TableHead>
-            <TableHead>Nhân viên lập đơn</TableHead>
+            <!-- <TableHead>Nhân viên lập đơn</TableHead> -->
             <TableHead>Bàn</TableHead>
             <TableHead>Khuyến mãi</TableHead>
-            <TableHead class="text-right">Actions</TableHead>
+            <TableHead>Tỷ lệ</TableHead>
+            <TableHead class="cursor-pointer w-1/11 flex items-center justify-end">Tổng Tiền Sau Khuyến mãi</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-for="invoice in invoiceStore.invoices" :key="invoice.id">
-            <TableCell>{{ formatDate(invoice.invoiceDate) }}</TableCell>
-            <TableCell>${{ invoice.totalCost.toFixed(2) }}</TableCell>
+            <TableCell>{{ formatDate(invoice.invoiceDate.toString()) }}</TableCell>
+            <TableCell class="text-right">{{ formatCurrency(invoice.totalCost) }}</TableCell>
             <TableCell>{{ invoice.orderNote || 'N/A' }}</TableCell>
-            <TableCell>{{ invoice.employeeName }}</TableCell>
+            <!-- <TableCell>{{ invoice.employeeName }}</TableCell> -->
             <TableCell>{{ invoice.tableNumber }}</TableCell>
             <TableCell>{{ invoice.promotionName || 'None' }}</TableCell>
+            <TableCell>{{ invoice.discount + "%" || 'None' }}</TableCell>
+            <TableCell class="text-right">{{ formatCurrency((invoice.totalCost - (invoice.totalCost * 15 / 100))) ||
+              'None'
+              }}</TableCell>
             <TableCell class="text-right">
               <Button variant="ghost" size="icon" @click="openInvoiceDetail(invoice)">
                 <InfoIcon class="h-4 w-4" />

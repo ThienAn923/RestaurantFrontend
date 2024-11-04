@@ -16,6 +16,7 @@ interface OrderDetail {
   quantity: number;
   orderID: string;
   createAt: string;
+  orderDetailStatus: string;
 }
 
 export const useOrderStore = defineStore('order', () => {
@@ -58,6 +59,24 @@ export const useOrderStore = defineStore('order', () => {
     }
   };
 
+  const updateOrderDetail = async (updatedOrderDetails: OrderDetail) => {
+    try {
+      const id = updatedOrderDetails.id;
+      const response = await fetch(`http://localhost:3000/api/orderDetail/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderDetailStatus: updatedOrderDetails.orderDetailStatus }),
+      });
+      if (response.ok) {
+        await fetchOrderDetails();
+      } else {
+        console.error('Failed to update order details');
+      }
+    } catch (error) {
+      console.error('Error updating order details:', error);
+    }
+  }
+
   const fetchOrderWithOrderDetails = async (orderID: string) => {
     try {
       const response = await fetch(`http://localhost:3000/api/order/${orderID}`);
@@ -99,6 +118,20 @@ export const useOrderStore = defineStore('order', () => {
       console.error('Error fetching order details:', error);
     }
   };
+
+  const fetchOrderByID = async (orderID: string) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/order/${orderID}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        console.error('Failed to fetch order');
+      }
+    } catch (error) {
+      console.error('Error fetching order:', error);
+    }
+  }
 
   const fetchOrderDetails = async () => {
     try {
@@ -178,5 +211,7 @@ export const useOrderStore = defineStore('order', () => {
     updateOrder,
     deleteOrder,
     fetchOrderWithOrderDetails,
+    fetchOrderByID,
+    updateOrderDetail,
   };
 });  

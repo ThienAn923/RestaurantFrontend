@@ -6,6 +6,8 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     token: null,
     user: null,
+    employeeId: null,
+    employeeName: null,
   }),
   getters: {
     isAuthenticated: (state) => !!state.token && !isTokenExpired(state.token),
@@ -18,8 +20,13 @@ export const useAuthStore = defineStore('auth', {
           accountUsername: username,
           accountPassword: password,
         })
+        // console.log(JSON.stringify(response.data));
         this.setToken(response.data.token)
         this.user = response.data.user
+        console.log("User:", JSON.stringify(this.user));
+        this.employeeId = response.data.user.Person.Employee.id // Include ID
+        this.employeeName = response.data.user.Person.name // Include name
+        console.log("Woawoawoa", this.employeeId, this.employeeName);
       } catch (error) {
         console.error('Login failed:', error.response ? error.response.data : error.message)
         throw error
@@ -33,6 +40,8 @@ export const useAuthStore = defineStore('auth', {
     logout() {
       this.token = null
       this.user = null
+      this.employeeId = null; // Clear employeeId
+      this.employeeName = null; // Clear employeeName
       localStorage.removeItem('token')
       delete axiosInstance.defaults.headers.common['Authorization']
     },
@@ -43,6 +52,11 @@ export const useAuthStore = defineStore('auth', {
         try {
           const response = await axiosInstance.get('/account/me/')
           this.user = response.data
+          this.employeeId = response.data.Person.Employee.id; // Ensure employeeId is set
+          this.employeeName = response.data.Person.name; // Ensure employeeName is set
+          // this.employeeId = response.data.user.Person.Employee.id; // Ensure employeeId is set
+          // this.employeeName = response.data.user.Person.name; // Ensure employeeName is set
+          // console.log("Uwa uwa uwa", this.employeeId, this.employeeName);
         } catch (error) {
           this.logout()
         }
@@ -57,7 +71,7 @@ export const useAuthStore = defineStore('auth', {
       {
         key: 'auth',
         storage: localStorage,
-        paths: ['token', 'user']
+        paths: ['token', 'user', 'employeeId', 'employeeName']
       },
     ],
   },

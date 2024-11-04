@@ -10,11 +10,21 @@ import { Plus, Edit, Trash2 } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
 import socket from '../socket';
 
+
+//At first, you will confuse why there is 2 table interface
+//And i am as confused as you lmao.
+//Just kidding, The first interface was written by me, 2 month later, then the second one was written by me, 2 month ago (which was when i have no idea what even is javascript and how to console.log lmao, and, this page was kinda build on this interface)
 interface Table {
   id: string;
   tableNumber: number;
   numberOfSeats: number;
   tableStatus: boolean;
+}
+interface Table2 {
+  id: string;
+  tableNumber: number;
+  numberOfSeats: number;
+  status: boolean;
 }
 
 
@@ -28,6 +38,7 @@ onMounted(async () => {
   })
 
   socket.on("tableUpdate", (updatedTable) => {
+    console.log("Checking the updatedTable at Table.vue: ", updatedTable);
     const index = tables.value.findIndex(t => t.id === updatedTable.id)
     if (index !== -1) {
       tables.value[index] = {
@@ -35,6 +46,8 @@ onMounted(async () => {
         numberOfSeats: updatedTable.seatNumber // Ensure numberOfSeats is updated correctly
       };
     }
+    console.log("Yooo, i got the /tableUpdate/ signal, im running at table.vue");
+    console.log("Printing tables at Table.vue: ", JSON.stringify(tables.value));
   })
 
   try {
@@ -52,10 +65,10 @@ onMounted(async () => {
   }
 })
 
-const tables = ref<Table[]>([]);
+const tables = ref<Table2[]>([]);
 const isAddTableModalOpen = ref(false);
 const isEditTableModalOpen = ref(false);
-const newTable = ref<Omit<Table, 'id'>>({
+const newTable = ref<Omit<Table2, 'id'>>({
   tableNumber: 0,
   numberOfSeats: 0,
   status: true
@@ -72,7 +85,7 @@ const closeAddTableModal = () => {
   resetNewTableForm();
 };
 
-const openEditTableModal = (table: Table) => {
+const openEditTableModal = (table: Table2) => {
   //Lmao trust me on this one, it DOES exist!!!!!!!!!! (status)
   //i get the status out of the table object and put it in the tableStatus property (dont blame me, i write this code at 3am)
   const { status, ...tableWithoutStatus } = table;
@@ -81,7 +94,6 @@ const openEditTableModal = (table: Table) => {
     tableStatus: status
   };
   editingTable.value = { ...tableWithStatus };
-  console.log("AHHHHHHHHHHHHHHHHHH", JSON.stringify(editingTable.value));
   isEditTableModalOpen.value = true;
 };
 
@@ -244,12 +256,12 @@ const resetNewTableForm = () => {
         <Card v-for="table in tables" :key="table.id" class="overflow-hidden">
           <CardContent class="p-4">
             <div class="flex justify-between items-start mb-4">
-              <h2 class="text-xl font-semibold">Table {{ table.tableNumber }}</h2>
+              <h2 class="text-xl font-semibold">Bàn {{ table.tableNumber }}</h2>
               <Badge :variant="table.status ? 'default' : 'secondary'">
-                {{ table.status ? 'Available' : 'Occupied' }}
+                {{ table.status ? 'Còn Trống' : 'Hết Chỗ' }}
               </Badge>
             </div>
-            <p class="text-gray-600 mb-4">Seats: {{ table.numberOfSeats }}</p>
+            <p class="text-gray-600 mb-4">Số chỗ ngồi: {{ table.numberOfSeats }}</p>
             <div class="flex justify-end space-x-2">
               <Button variant="outline" size="sm" @click="openEditTableModal(table)">
                 <Edit class="w-4 h-4 mr-2" />

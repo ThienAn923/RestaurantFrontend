@@ -157,19 +157,15 @@ watch([searchQuery], () => {
 <template>
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold">Import Invoices</h1>
-      <Button @click="isAddModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white" >
+      <h1 class="text-3xl font-bold">Quản Lý Hóa Đơn Nhập</h1>
+      <Button @click="isAddModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
         <PlusIcon class="mr-2 h-4 w-4" /> Add Import Invoice
       </Button>
     </div>
 
     <div class="mb-4 flex space-x-4">
       <div class="relative flex-grow">
-        <Input
-          v-model="searchQuery"
-          placeholder="Tìm kiếm theo ngày, nhân viên"
-          class="pl-10"
-        />
+        <Input v-model="searchQuery" placeholder="Tìm kiếm theo ngày, nhân viên" class="pl-10" />
         <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
       </div>
       <Select v-model="filterStatus">
@@ -177,7 +173,7 @@ watch([searchQuery], () => {
           <SelectValue placeholder="Filter by provider" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value = "AllProvider">All provider</SelectItem>
+          <SelectItem value="AllProvider">All provider</SelectItem>
           <SelectItem v-for="provider in importInvoiceStore.providers" :key="provider.id" :value="provider.id">
             {{ provider.providerName }}
           </SelectItem>
@@ -193,31 +189,22 @@ watch([searchQuery], () => {
             <TableHead @click="sortTable('importDate')" class="cursor-pointer">
               <div class="flex items-center justify-between">
                 <span>Date</span>
-                <component 
-                  :is="getSortIcon('importDate') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('importDate')}"
-                />
+                <component :is="getSortIcon('importDate') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('importDate') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('Provider.providerName')" class="cursor-pointer">
               <div class="flex items-center justify-between">
                 <span>Provider</span>
-                <component 
-                  :is="getSortIcon('Provider.providerName') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('Provider.providerName')}"
-                />
+                <component :is="getSortIcon('Provider.providerName') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('Provider.providerName') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('totalExpense')" class="cursor-pointer">
               <div class="flex items-center justify-between">
                 <span>Total</span>
-                <component 
-                  :is="getSortIcon('totalExpense') || 'div'" 
-                  class="w-4 h-4 ml-2"
-                  :class="{'text-transparent': !getSortIcon('totalExpense')}"
-                />
+                <component :is="getSortIcon('totalExpense') || 'div'" class="w-4 h-4 ml-2"
+                  :class="{ 'text-transparent': !getSortIcon('totalExpense') }" />
               </div>
             </TableHead>
             <TableHead class="text-right">Actions</TableHead>
@@ -229,28 +216,15 @@ watch([searchQuery], () => {
             <TableCell>{{ invoice.Provider.providerName }}</TableCell>
             <TableCell>${{ invoice.totalExpense.toFixed(2) }}</TableCell>
             <TableCell class="text-right">
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="openInfoModal(invoice)"
-                class="text-gray-600 hover:text-blue-600 hover:bg-blue-100"
-              >
+              <Button variant="ghost" size="icon" @click="openInfoModal(invoice)"
+                class="text-gray-600 hover:text-blue-600 hover:bg-blue-100">
                 <InfoIcon class="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-
-                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100"
-              >
+              <Button variant="ghost" size="icon" class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="deleteImportInvoice(invoice.id)"
-                class="text-red-500 hover:text-white hover:bg-red-500"
-              >
+              <Button variant="ghost" size="icon" @click="deleteImportInvoice(invoice.id)"
+                class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
             </TableCell>
@@ -262,36 +236,22 @@ watch([searchQuery], () => {
     <!-- Pagination -->
     <div class="mt-4 flex items-center justify-between">
       <div class="text-sm text-gray-700">
-        Showing {{ (importInvoiceStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(importInvoiceStore.currentPage * 5, importInvoiceStore.totalItems) }} of {{ importInvoiceStore.totalItems }} entries
+        Showing {{ (importInvoiceStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(importInvoiceStore.currentPage * 5,
+          importInvoiceStore.totalItems) }} of {{ importInvoiceStore.totalItems }} entries
       </div>
       <div class="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(importInvoiceStore.currentPage - 1)"
-          :disabled="importInvoiceStore.currentPage === 1"
-          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+        <Button variant="outline" size="sm" @click="goToPage(importInvoiceStore.currentPage - 1)"
+          :disabled="importInvoiceStore.currentPage === 1" class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
-        <Button
-          v-for="page in pageNumbers"
-          :key="page"
-          variant="outline"
-          size="sm"
+        <Button v-for="page in pageNumbers" :key="page" variant="outline" size="sm"
           :class="{ 'bg-blue-500 text-white': page === importInvoiceStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== importInvoiceStore.currentPage }"
-          @click="typeof page === 'number' ? goToPage(page) : null"
-          :disabled="typeof page !== 'number'"
-        >
+          @click="typeof page === 'number' ? goToPage(page) : null" :disabled="typeof page !== 'number'">
           {{ page }}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(importInvoiceStore.currentPage + 1)"
+        <Button variant="outline" size="sm" @click="goToPage(importInvoiceStore.currentPage + 1)"
           :disabled="importInvoiceStore.currentPage === importInvoiceStore.totalPages"
-           class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
       </div>
@@ -326,11 +286,7 @@ watch([searchQuery], () => {
                   <SelectValue placeholder="Select employee" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem 
-                    v-for="employee in employeeNames" 
-                    :key="employee.id" 
-                    :value="employee.id"
-                  >
+                  <SelectItem v-for="employee in employeeNames" :key="employee.id" :value="employee.id">
                     {{ employee.name }}
                   </SelectItem>
                 </SelectContent>
@@ -358,7 +314,8 @@ watch([searchQuery], () => {
                         <SelectValue placeholder="Select ingredient" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem v-for="ingredient in importInvoiceStore.ingredients" :key="ingredient.id" :value="ingredient.id">
+                        <SelectItem v-for="ingredient in importInvoiceStore.ingredients" :key="ingredient.id"
+                          :value="ingredient.id">
                           {{ ingredient.ingredientName }}
                         </SelectItem>
                       </SelectContent>
