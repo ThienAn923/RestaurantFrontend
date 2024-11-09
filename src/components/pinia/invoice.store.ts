@@ -26,6 +26,7 @@ interface Invoice {
   tableNumber: number;
   promotionID?: string | undefined;
   promotionName: string; //this have a default value "No promotion"
+  invoiceTotalCost: number;
   invoiceDetails: InvoiceDetail[];
 }
 
@@ -131,6 +132,85 @@ export const useInvoiceStore = defineStore('invoice', () => {
     }
   }
 
+
+  //for dashboard
+  interface TotalIncome {
+    today: number,
+    week: number,
+    month: number,
+    
+  }
+  
+  const getTotalIncome = async (): Promise<TotalIncome> => {
+    try {
+      const response = await axiosInstance.get<TotalIncome>("/invoice/getTotalIncome");
+      return response.data; // Directly return the TotalIncome object
+    } catch (error) {
+      console.error('Error fetching total income:', error);
+      // Return a TotalIncome object with default values in case of an error
+      return {
+        today: 0,
+        week: 0,
+        month: 0
+      };
+    }
+  };
+
+  //I CAN  modify the fetch invocie to fetch the recent invoice, but it will break all the file that use this function
+  //so I will create a new function to fetch the recent invoice
+  interface RecentInvoice {
+    id: string;
+    finalTotalMoney: number;
+    invoiceDate: Date;
+  }
+  const fetchRecentInvoice = async () => {
+    try{
+      const response = await axiosInstance.get<ApiResponse<RecentInvoice[]>>("/invoice/recentInvoice")
+      return response.data
+    }catch (error) {
+      console.error('Error fetching recent invoices:', error)
+    }
+  }
+
+  const getTopDishes = async () => { 
+    try {
+      const response = await axiosInstance.get<ApiResponse<InvoiceDetail[]>>("/invoice/topDish")
+      return response.data
+    } catch (error) {
+      console.error('Error fetching top dish:', error)
+    }
+  }
+
+  interface IncomeDataPoint {
+  timeUnit: string;
+  income: number;
+}
+
+type incomePeriod = 'day' | 'week' | 'month' | 'year';
+
+interface IncomeData extends Record<incomePeriod, IncomeDataPoint[]> {}
+
+const fetchIncomeData = async () => {
+  try {
+    const response = await axiosInstance.get<ApiResponse<IncomeData>>(`/invoice/incomeData/`);
+    return response;
+  } catch (error) {
+    console.error('Error fetching income data:', error);
+  }
+};
+
+//This function is unused, purpose: fetch income data for EACH period, not ALL period like the function above, there is also
+// no backend for this function. This is a "just in case" function
+// const fetchIncomeData = async (period: incomePeriod) => {
+//   try {
+//     const response = await axiosInstance.get<ApiResponse<IncomeData>>(`/invoice/incomeData/${period}`);
+//     return response;
+//   } catch (error) {
+//     console.error('Error fetching income data:', error);
+//   }
+// };
+
+
   
   const setSorting = (column: string, order: 'asc' | 'desc') => {
     sortColumn.value = column
@@ -156,5 +236,9 @@ export const useInvoiceStore = defineStore('invoice', () => {
     setSearch,
     setFilter,
     createInvoice,
+    getTotalIncome,
+    fetchRecentInvoice,
+    getTopDishes,
+    fetchIncomeData,
   }
 })

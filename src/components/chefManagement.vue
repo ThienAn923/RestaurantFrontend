@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { ClockIcon, UtensilsIcon, RefreshCwIcon, CheckCheckIcon, Check, CalendarIcon } from 'lucide-vue-next';
+import { ref, computed, onMounted, watch } from 'vue';
+import { ClockIcon, UtensilsIcon, Check } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useOrderStore } from '../components/pinia/order.store';
 import socket from '../socket';
 import { toVietnamese } from '@/lib/toVietnamese';
-import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
+import TestComponent from './testComponent.vue';
 
 const orderStore = useOrderStore();
 const currentFilter = ref('Tất cả');
 const isDialogOpen = ref(false);
 const selectedOrder = ref<Order | null>(null);
-const selectedDate = ref(new Date());
+const selectedDate = ref<string>(new Date().toISOString());
+const testComponentRef = ref(TestComponent);
 
 interface Order {
   id: string;
@@ -27,6 +27,7 @@ interface Order {
   tableID: string;
   updateAt: string;
   createAt: string;
+  forDate: string;
   Table: {
     tableNumber: number;
   };
@@ -88,18 +89,42 @@ onMounted(() => {
 });
 
 const filteredOrders = computed(() => {
-  if (currentFilter.value === 'Tất cả') return orderStore.orders;
   return orderStore.orders.filter(order => {
-    switch (currentFilter.value) {
-      case 'Đơn mới':
-        return order.orderStatus === 'new';
-      case 'Đang nấu':
-        return order.orderStatus === 'cooking';
-      case 'Hoàn thành':
-        return order.orderStatus === 'finished';
-      default:
-        return true;
+    if (currentFilter.value !== 'Tất cả') {
+      switch (currentFilter.value) {
+        case 'Đơn mới':
+          if (order.orderStatus !== 'new') return false;
+          break;
+        case 'Đang nấu':
+          if (order.orderStatus !== 'cooking') return false;
+          break;
+        case 'Hoàn thành':
+          if (order.orderStatus !== 'finished') return false;
+          break;
+      }
     }
+
+
+
+    //Jesus, i hate this just as you, but trust me, this is the simpliest way
+    // The selected date is day-month-year:00:00:00... but forDate is at date-month-year:xx:xx:xx
+    //So we need to compare only day-month-year
+    if (selectedDate.value) {
+      const orderDate = new Date(order.forDate);
+      const selectedDateObj = new Date(selectedDate.value);
+
+      const orderDay = orderDate.getUTCDate();
+      const orderMonth = orderDate.getUTCMonth();
+      const orderYear = orderDate.getUTCFullYear();
+
+      const selectedDay = selectedDateObj.getUTCDate();
+      const selectedMonth = selectedDateObj.getUTCMonth();
+      const selectedYear = selectedDateObj.getUTCFullYear();
+
+      return orderDay === selectedDay && orderMonth === selectedMonth && orderYear === selectedYear;
+    }
+
+    return true;
   });
 });
 
@@ -142,13 +167,23 @@ const closeDialog = () => {
 };
 
 
-const formatDate = (date: Date) => {
-  return date.toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-};
+
+const formatDate = (date: any) => {
+  console.log(date);
+  const { year, month, day } = date;
+  const formattedDate = new Date(year, month - 1, day).toISOString();
+  return formattedDate;
+}
+const getSelectedDate = (date: any) => {
+  console.log("getSlectedDate: ", date);
+  selectedDate.value = formatDate(date);
+}
+
+watch([selectedDate], () => {
+  console.log("Selected date from DishesManagementOrder: ", selectedDate.value);
+})
+
+
 </script>
 
 <template>
@@ -167,19 +202,9 @@ const formatDate = (date: Date) => {
             {{ status }}
           </Button>
         </div>
-        <div class="relative">
-          <Popover>
-            <PopoverTrigger>
-              <Button variant="outline" class="ml-2">
-                <CalendarIcon class="mr-2 h-4 w-4" />
-                {{ formatDate(selectedDate) }}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent class="p-0">
-              <Datepicker v-model="selectedDate" locale="vi" :enable-time-picker="false" auto-apply :format="formatDate"
-                menu-class-name="dp-menu" input-class-name="dp-input" />
-            </PopoverContent>
-          </Popover>
+        <div>
+          <!-- If the testComponent(date picker XD)'s date is selected, it emit "date-selected", then this will catch' -->
+          <TestComponent @date-selected="getSelectedDate" ref="testConponentRef" />
         </div>
 
       </div>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { PlusIcon, PencilIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, InfoIcon, ChevronUpIcon, ChevronDownIcon } from 'lucide-vue-next'
+import { PlusIcon, SearchIcon, PencilIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, InfoIcon, ChevronUpIcon, ChevronDownIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -8,8 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useImportInvoiceStore } from './pinia/importInvoice.store'
+import { formatCurrency } from '@/lib/formatMoney';
+import { useAuthStore } from './pinia/auth'
 
 const importInvoiceStore = useImportInvoiceStore()
+const authStore = useAuthStore()
 
 const isAddModalOpen = ref(false)
 const isInfoModalOpen = ref(false)
@@ -40,16 +43,19 @@ const employeeNames = computed(() => {
 })
 
 const addImportInvoice = async () => {
+  // console.log("Running from addImportInvoicAAAA", JSON.stringify(newImportInvoice.value));
+  const employeeId = authStore.employeeId;
   const invoiceData = {
     providerId: newImportInvoice.value.providerId,
-    employeeId: newImportInvoice.value.employeeId,
+    employeeId: employeeId,
     importInvoiceDetails: newImportInvoice.value.importInvoiceDetails.map(detail => ({
-      ingredientId: detail.ingredientId,
-      quantity: detail.quantity,
+      ingredientID: detail.ingredientId,
       price: detail.price,
+      quantity: detail.quantity,
       total: detail.total
     }))
-  };
+  }; console.log("Running from addImportInvoic InvoiceData:", JSON.stringify(invoiceData));
+
   await importInvoiceStore.addImportInvoice(invoiceData);
   isAddModalOpen.value = false
   resetNewImportInvoice()
@@ -159,7 +165,7 @@ watch([searchQuery], () => {
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">Quản Lý Hóa Đơn Nhập</h1>
       <Button @click="isAddModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
-        <PlusIcon class="mr-2 h-4 w-4" /> Add Import Invoice
+        <PlusIcon class="mr-2 h-4 w-4" /> Thêm Hóa Đơn Nhập
       </Button>
     </div>
 
@@ -170,16 +176,16 @@ watch([searchQuery], () => {
       </div>
       <Select v-model="filterStatus">
         <SelectTrigger class="w-[200px]">
-          <SelectValue placeholder="Filter by provider" />
+          <SelectValue placeholder="Lọc Theo Nhà Cung Cấp" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="AllProvider">All provider</SelectItem>
+          <SelectItem value="AllProvider">Tất Cả</SelectItem>
           <SelectItem v-for="provider in importInvoiceStore.providers" :key="provider.id" :value="provider.id">
             {{ provider.providerName }}
           </SelectItem>
         </SelectContent>
       </Select>
-      <Button @click="resetFilters" variant="outline">Reset Filters</Button>
+      <Button @click="resetFilters" variant="outline">Reset Bộ Lọc</Button>
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -188,33 +194,33 @@ watch([searchQuery], () => {
           <TableRow>
             <TableHead @click="sortTable('importDate')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Date</span>
+                <span>Ngày Tạo</span>
                 <component :is="getSortIcon('importDate') || 'div'" class="w-4 h-4 ml-2"
                   :class="{ 'text-transparent': !getSortIcon('importDate') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('Provider.providerName')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Provider</span>
+                <span>Nhà Cung Cấp</span>
                 <component :is="getSortIcon('Provider.providerName') || 'div'" class="w-4 h-4 ml-2"
                   :class="{ 'text-transparent': !getSortIcon('Provider.providerName') }" />
               </div>
             </TableHead>
             <TableHead @click="sortTable('totalExpense')" class="cursor-pointer">
-              <div class="flex items-center justify-between">
-                <span>Total</span>
-                <component :is="getSortIcon('totalExpense') || 'div'" class="w-4 h-4 ml-2"
+              <div class="flex items-center justify-end">
+                <span>Tổng Cộng</span>
+                <component :is="getSortIcon('totalExpense') || 'div'" class="w-4 h-4 ml-1"
                   :class="{ 'text-transparent': !getSortIcon('totalExpense') }" />
               </div>
             </TableHead>
-            <TableHead class="text-right">Actions</TableHead>
+            <TableHead class="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-for="invoice in importInvoiceStore.importInvoices" :key="invoice.id">
             <TableCell>{{ new Date(invoice.importDate).toLocaleDateString() }}</TableCell>
             <TableCell>{{ invoice.Provider.providerName }}</TableCell>
-            <TableCell>${{ invoice.totalExpense.toFixed(2) }}</TableCell>
+            <TableCell class="text-right w-2/12">{{ formatCurrency(invoice.totalExpense) }}</TableCell>
             <TableCell class="text-right">
               <Button variant="ghost" size="icon" @click="openInfoModal(invoice)"
                 class="text-gray-600 hover:text-blue-600 hover:bg-blue-100">
@@ -261,16 +267,16 @@ watch([searchQuery], () => {
     <Dialog v-model:open="isAddModalOpen">
       <DialogContent class="sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle>Add Import Invoice</DialogTitle>
-          <DialogDescription>Enter the details for the new import invoice.</DialogDescription>
+          <DialogTitle>Thêm Hóa Đơn Nhập</DialogTitle>
+          <DialogDescription>Nhập thông tin cho hóa đơn nhập dưới đây</DialogDescription>
         </DialogHeader>
         <form @submit.prevent="addImportInvoice" class="space-y-4">
           <div class="grid grid-cols-2 gap-6">
             <div>
-              <Label for="provider">Provider</Label>
+              <Label for="provider">Nhà Cung Cấp</Label>
               <Select v-model="newImportInvoice.providerId">
                 <SelectTrigger>
-                  <SelectValue placeholder="Select provider" />
+                  <SelectValue placeholder="Chọn Nhà Cung Cấp" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem v-for="provider in importInvoiceStore.providers" :key="provider.id" :value="provider.id">
@@ -279,8 +285,8 @@ watch([searchQuery], () => {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label for="employee">Employee</Label>
+            <!-- <div>
+              <Label for="employee">Nhân Viên</Label>
               <Select v-model="newImportInvoice.employeeId">
                 <SelectTrigger>
                   <SelectValue placeholder="Select employee" />
@@ -291,7 +297,7 @@ watch([searchQuery], () => {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> -->
           </div>
 
           <!-- Scrollable Line items list -->
@@ -299,11 +305,11 @@ watch([searchQuery], () => {
             <Table>
               <TableHeader class="sticky top-0 bg-white z-10">
                 <TableRow>
-                  <TableHead>Item</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Unit Price</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead class="text-right">Actions</TableHead>
+                  <TableHead>Nguyên Liệu</TableHead>
+                  <TableHead>Số Lượng</TableHead>
+                  <TableHead>Giá/Đơn Vị</TableHead>
+                  <TableHead>Tổng</TableHead>
+                  <TableHead class="text-right"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -327,9 +333,10 @@ watch([searchQuery], () => {
                   <TableCell>
                     <Input type="number" v-model="item.price" @input="updateLineItemTotal(index)" />
                   </TableCell>
-                  <TableCell>${{ item.total.toFixed(2) }}</TableCell>
+                  <TableCell>${{ formatCurrency(item.total) }}</TableCell>
                   <TableCell class="text-right">
-                    <Button variant="outline" size="icon" @click.prevent="removeLineItem(index)">
+                    <Button variant="outline" size="icon" class=" text-red-500 hover:text-white hover:bg-red-500"
+                      @click.prevent="removeLineItem(index)">
                       <Trash2Icon class="h-4 w-4" />
                     </Button>
                   </TableCell>
@@ -340,15 +347,15 @@ watch([searchQuery], () => {
           <div class="flex justify-between items-center">
             <Button @click.prevent="addLineItem">
               <PlusIcon class="h-4 w-4 mr-2" />
-              Add Item
+              Thêm Nguyên Liệu
             </Button>
             <div class="text-right">
-              <span class="font-bold">Total: ${{ invoiceTotal }}</span>
+              <span class="font-bold">Tổng Cộng: {{ formatCurrency(parseFloat(invoiceTotal)) }}</span>
             </div>
           </div>
 
           <DialogFooter>
-            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Submit</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Thêm</Button>
           </DialogFooter>
         </form>
       </DialogContent>

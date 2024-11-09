@@ -17,17 +17,20 @@ import { useDishStore } from './pinia/dish.store'
 //Lmao old page, no store yet XD, gotta make a type manually then fetch it
 // import { userTableStore } from './pinia/table.store'
 import { useOrderStore } from './pinia/order.store'
-import { error } from 'console'
 import { formatCurrency } from '@/lib/formatMoney.js'
 import { useToast } from "@/components/ui/toast";
+import TestComponent from './testComponent.vue'
 
 
 
 // const tableStore = userTableStore();
 const dishStore = useDishStore();
-const orderStore = useOrderStore();
+// const orderStore = useOrderStore();
 const authStore = useAuthStore();
 const { toast } = useToast()
+const selectedDate = ref<string>(new Date().toISOString()) //Nope, this aint nullable, my order gonna break if it's null
+const testComponentRef = ref<any>(TestComponent);
+
 
 const dishes = ref<Dish[]>([]);
 const dishTypes = ref<DishType[]>([]);
@@ -182,6 +185,14 @@ watch([filterStatus, filterType], async () => {
 });
 
 
+//it's both get and format
+const getSelectedDate = (date: any) => {
+  const { year, month, day } = date;
+  const formattedDate = new Date(year, month - 1, day).toISOString();
+  selectedDate.value = formattedDate;
+  // console.log("Selected date from DishesManagementOrder: ", formattedDate);
+}
+
 
 
 
@@ -251,32 +262,8 @@ const updateQuantity = (id: string, newQuantity: number) => {
   )
 }
 
-// const makeOrder = async () => {
 
-//   const employeeId = authStore.employeeId; // Get EmployeeID from the store
-//   console.log(authStore.user, authStore.employeeId, authStore.name);
-//   // console.log("AHHHHHHHHHHHHHH", JSON.stringify(authStore.user));
-//   // const employeeId = authStore.user.Person.Employee.id;
-//   if (!employeeId) {
-//     console.error('EmployeeID is not available');
-//     return;
-//   }
 
-//   try {
-//     const response = await axiosInstance.post<ApiResponse<Order>>("/order", {
-//       tableID: selectedTable.value,
-//       employeeID: employeeId, // Include EmployeeID in the order
-//       orderNote: orderNote.value,
-//       OrderDetail: orderItems.value.map(item => ({
-//         dishId: item.id,
-//         quantity: item.quantity,
-//       })),
-//     });
-//     console.log('Order successful:', JSON.stringify(response.data));
-//   } catch (error) {
-//     console.error('Order failed:', error.response ? error.response.data : error.message);
-//   }
-// };
 const makeOrder = async () => {
   const employeeId = authStore.employeeId; // Get EmployeeID from the store
   console.log(authStore.user, authStore.employeeId, authStore.name);
@@ -291,6 +278,7 @@ const makeOrder = async () => {
       tableID: selectedTable.value,
       employeeID: employeeId, // Include EmployeeID in the order
       orderNote: orderNote.value,
+      forDate: selectedDate.value,
       OrderDetail: orderItems.value.map(item => ({
         dishId: item.id,
         quantity: item.quantity,
@@ -304,16 +292,13 @@ const makeOrder = async () => {
     orderItems.value = []; // Clear all order items
     discount.value = 0; // Reset discount if you have one
 
-    // You might want to show a success message to the user
-    // For example, using a toast notification or an alert
-    // alert('Order submitted successfully!');
     toast({
       title: 'Đặt Đơn Thành Công',
       description: 'Đơn món đã được chuyển đến bộ phận nấu ăn',
     });
 
   } catch (error) {
-    console.error('Order failed:', error.response ? error.response.data : error.message);
+    // console.error('Order failed:', error.response ? error.response.data : error.message);
     // You might want to show an error message to the user
     alert('Failed to submit order. Please try again.');
   }
@@ -408,6 +393,8 @@ const removeItem = (id: String) => {
                 </SelectItem>
               </SelectContent>
             </Select>
+
+            <TestComponent @date-selected="getSelectedDate" ref="testConponentRef" />
 
             <div class="grid grid-cols-[2fr_60px_60px] gap-4 mb-4">
               <div class="text-sm font-medium">Item</div>

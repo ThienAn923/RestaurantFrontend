@@ -7,7 +7,8 @@ interface Order {
   employeeID: string;
   orderNote: string;
   tableID: string;
-  createAt: string;
+  createAt: string; //Why String? I HAVE NO IDEA!!! If shits work, dont touch it (not me code this XD)
+  forDate: string; //WHY IS THE API RETURnING A STRING??????
 }
 
 interface OrderDetail {

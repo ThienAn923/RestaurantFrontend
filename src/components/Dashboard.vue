@@ -1,127 +1,152 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { BarChart, DollarSign, Utensils } from 'lucide-vue-next'
+import { useInvoiceStore } from './pinia/invoice.store'
+import { ScrollArea } from './ui/scroll-area'
+import { AreaChart } from '@/components/ui/chart-area'
+import { format } from 'date-fns';
+import { formatCurrency } from '@/lib/formatMoney'
+import CustomChartTooltip from './ui/tooltip/CustomChartTooltip.vue' //this is a custome file that i made, not provided by the template
+import { watch } from 'fs'
+
+const invoiceStore = useInvoiceStore();
 
 // Define types
 type Invoice = {
   id: number;
-  amount: number;
-  time: string;
+  finalTotalCost: number;
+  invoiceDate: Date;
 }
 
 type Dish = {
-  name: string;
-  sales: number;
+  id: string;
+  dishName: string;
+  count: number;
 }
 
+//this shit is unused, the shit that use this is also unused
 type IncomeDataPoint = {
-  name: string;
+  timeUnit: string;
   income: number;
+  expense: number;
+  ingredientCost: number;
 }
 
-type Period = 'today' | 'week' | 'month' | 'year'
+type Period = 'today' | 'week' | 'month' | 'year';
+type incomePeriod = 'day' | 'week' | 'month' | 'year';
 
 // Mock data with proper typing
-const recentInvoices = ref<Invoice[]>([
-  { id: 1, amount: 50.00, time: '10:15 AM' },
-  { id: 2, amount: 75.50, time: '10:30 AM' },
-  { id: 3, amount: 120.00, time: '10:45 AM' },
-])
+const recentInvoices = ref<Invoice[]>([]);
 
-const incomeData: Record<Exclude<Period, 'today'>, IncomeDataPoint[]> = {
-  week: [
-    { name: 'Mon', income: 1000 },
-    { name: 'Tue', income: 1200 },
-    { name: 'Wed', income: 1100 },
-    { name: 'Thu', income: 1300 },
-    { name: 'Fri', income: 1500 },
-    { name: 'Sat', income: 1800 },
-    { name: 'Sun', income: 1600 },
-  ],
-  month: [
-    { name: 'Week 1', income: 7000 },
-    { name: 'Week 2', income: 7500 },
-    { name: 'Week 3', income: 8000 },
-    { name: 'Week 4', income: 8500 },
-  ],
-  year: [
-    { name: 'Jan', income: 30000 },
-    { name: 'Feb', income: 32000 },
-    { name: 'Mar', income: 35000 },
-    { name: 'Apr', income: 33000 },
-    { name: 'May', income: 36000 },
-    { name: 'Jun', income: 38000 },
-  ],
+//currently i store all the data of income here, this could be better for user to switch around tables
+//But will kinda cpu and time consumming when loaded? i think
+//Will hold data like this: Day{7 object}, week{12 object}, month {12 object}, years {all the rest of the year}
+//The year one could be dangerous if there's million and million of invoice?
+//Hai da, idk, but currently, this is just a test product, it wont hold as much data
+const incomeData = ref<Record<incomePeriod, IncomeDataPoint[]>>({
+  day: [],
+  week: [],
+  month: [],
+  year: [],
+});
+
+interface TotalIncome {
+  today: number;
+  week: number;
+  month: number;
 }
 
-const totalIncome = ref({
-  today: 1500,
-  week: 8500,
-  month: 35000,
+const totalIncome = ref<TotalIncome>({
+  today: 0,
+  week: 0,
+  month: 0,
 })
 
 const topDishes = ref<Record<Period, Dish[]>>({
   today: [
-    { name: 'Spaghetti Carbonara', sales: 45 },
-    { name: 'Margherita Pizza', sales: 40 },
-    { name: 'Caesar Salad', sales: 35 },
   ],
   week: [
-    { name: 'Spaghetti Carbonara', sales: 280 },
-    { name: 'Margherita Pizza', sales: 260 },
-    { name: 'Grilled Salmon', sales: 240 },
   ],
   month: [
-    { name: 'Spaghetti Carbonara', sales: 1200 },
-    { name: 'Margherita Pizza', sales: 1100 },
-    { name: 'Grilled Salmon', sales: 1000 },
   ],
   year: [] // Add this to match the Period type
 })
 
 const selectedPeriod = ref<Period>('week')
+
+const formatDate = (dateString: string): string => {
+  return format(new Date(dateString), ' HH:mm:ss');
+};
+
+onMounted(async () => {
+  // Fetch data from the store
+  totalIncome.value = await invoiceStore.getTotalIncome();
+
+  const response = await invoiceStore.fetchRecentInvoice();
+  recentInvoices.value = response?.data.formattedInvoices || [];
+
+  const topDishesResponse = await invoiceStore.getTopDishes();
+  topDishes.value = topDishesResponse?.data || [];
+  // console.log(JSON.stringify(topDishes.value));
+
+  const incomeDataResponse = await invoiceStore.fetchIncomeData();
+  incomeData.value = incomeDataResponse?.data;
+
+  console.log("Running onMounted Dashboard", JSON.stringify(incomeData.value.day));
+
+
+})
+
+const chartSelection = ref<incomePeriod>('day');
+const selectedData = computed(() => {
+  return incomeData.value[chartSelection.value];
+});
+
 </script>
 
 <template>
   <div class="p-6">
     <h1 class="text-3xl font-bold mb-6">Dashboard</h1>
-    
+
     <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       <!-- 30 Minute Invoice -->
       <Card>
         <CardHeader>
-          <CardTitle>Recent Invoices (30 min)</CardTitle>
+          <CardTitle>Hóa Đơn Gần Đây (30 Phút)</CardTitle>
         </CardHeader>
         <CardContent>
-          <ul class="space-y-2">
-            <li v-for="invoice in recentInvoices" :key="invoice.id" class="flex justify-between items-center">
-              <span>${{ invoice.amount.toFixed(2) }}</span>
-              <span class="text-gray-500">{{ invoice.time }}</span>
-            </li>
-          </ul>
+          <ScrollArea>
+            <div class="h-32">
+              <ul class="space-y-2">
+                <li v-for="invoice in recentInvoices" :key="invoice.id" class="flex justify-between items-center">
+                  <span class="text-gray-500 ">{{ formatDate(invoice.invoiceDate.toString()) }}</span>
+                  <span class="font-bold">{{ formatCurrency(invoice.finalTotalCost) }}</span>
+                </li>
+              </ul>
+            </div>
+          </ScrollArea>
         </CardContent>
       </Card>
 
       <!-- Total Income -->
       <Card>
         <CardHeader>
-          <CardTitle>Total Income</CardTitle>
+          <CardTitle>Tổng Thu Nhập</CardTitle>
         </CardHeader>
         <CardContent>
           <div class="space-y-2">
             <div class="flex justify-between items-center">
-              <span>Today:</span>
-              <span class="font-bold">${{ totalIncome.today.toLocaleString() }}</span>
+              <span>Hôm Nay:</span>
+              <span class="font-bold">{{ formatCurrency(totalIncome.today) }}</span>
             </div>
             <div class="flex justify-between items-center">
-              <span>This Week:</span>
-              <span class="font-bold">${{ totalIncome.week.toLocaleString() }}</span>
+              <span>Tuần Này:</span>
+              <span class="font-bold">{{ formatCurrency(totalIncome.week) }}</span>
             </div>
             <div class="flex justify-between items-center">
-              <span>This Month:</span>
-              <span class="font-bold">${{ totalIncome.month.toLocaleString() }}</span>
+              <span>Tháng Này:</span>
+              <span class="font-bold">{{ formatCurrency(totalIncome.month) }}</span>
             </div>
           </div>
         </CardContent>
@@ -130,20 +155,20 @@ const selectedPeriod = ref<Period>('week')
       <!-- Top Dishes -->
       <Card>
         <CardHeader>
-          <CardTitle>Top Dishes</CardTitle>
+          <CardTitle>Top Món Ăn</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs v-model="selectedPeriod" class="w-full">
             <TabsList class="grid w-full grid-cols-3">
-              <TabsTrigger value="today">Today</TabsTrigger>
-              <TabsTrigger value="week">Week</TabsTrigger>
-              <TabsTrigger value="month">Month</TabsTrigger>
+              <TabsTrigger value="today">Hôm Nay</TabsTrigger>
+              <TabsTrigger value="week">Trong Tuần</TabsTrigger>
+              <TabsTrigger value="month">Trong Tháng</TabsTrigger>
             </TabsList>
             <TabsContent v-for="period in ['today', 'week', 'month'] as const" :key="period" :value="period">
               <ul class="space-y-2">
-                <li v-for="dish in topDishes[period]" :key="dish.name" class="flex justify-between items-center">
-                  <span>{{ dish.name }}</span>
-                  <span class="font-bold">{{ dish.sales }}</span>
+                <li v-for="dish in topDishes[period]" :key="dish.id" class="flex justify-between items-center">
+                  <span>{{ dish.dishName }}</span>
+                  <span class="font-bold">{{ dish.count }}</span>
                 </li>
               </ul>
             </TabsContent>
@@ -155,12 +180,20 @@ const selectedPeriod = ref<Period>('week')
     <!-- Income Chart Placeholder -->
     <Card class="mt-6">
       <CardHeader>
-        <CardTitle>Income Chart</CardTitle>
+        <CardTitle>Biểu Đồ Thu Nhập</CardTitle>
+        <div class="flex items-end justify-end mt-2 mr-2">
+          <select v-model="chartSelection" class="p-2 border rounded">
+            <option value="day">Trong 1 tháng</option>
+            <option value="week">Trong 3 tháng</option>
+            <option value="month">Trong 1 Năm</option>
+            <option value="year">Tất Cả</option>
+          </select>
+        </div>
       </CardHeader>
       <CardContent>
-        <div class="h-[300px] flex items-center justify-center bg-gray-100 rounded-md">
-          <p class="text-gray-500">This space is for income chart</p>
-        </div>
+        <AreaChart :data="selectedData" :colors="['#5DADE2', 'pink', 'orange', 'red']" index="timeUnit"
+          :categories="['income', 'expense', 'ingredientCost']" :custom-tooltip="CustomChartTooltip"
+          :y-formatter="(tick) => formatCurrency(tick)" />
       </CardContent>
     </Card>
   </div>

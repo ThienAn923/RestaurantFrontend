@@ -82,7 +82,8 @@ export const useImportInvoiceStore = defineStore('importinvoice', () => {
     try {
       const response = await fetch('http://localhost:3000/api/ingredient')
       const data = await response.json()
-      ingredients.value = data.ingredients
+      ingredients.value = data.data //lmao
+      console.log("Printing ingredient value from importInvoice store",JSON.stringify( ingredients.value));
     } catch (error) {
       console.error('Error fetching ingredients:', error)
     }
@@ -120,16 +121,16 @@ export const useImportInvoiceStore = defineStore('importinvoice', () => {
     }
   }
 
-  const addImportInvoice = async (newImportInvoice: Omit<ImportInvoice, 'id'>) => {
+  const addImportInvoice = async (newImportInvoice) => {
     try {
-      console.log(newImportInvoice)
+      console.log("Runnign from importinvoiceStore",JSON.stringify(newImportInvoice))
       const totalExpense = newImportInvoice.importInvoiceDetails.reduce((acc, detail) => acc + detail.totalExpense, 0);
       const importInvoiceData = {
         providerId: newImportInvoice.providerId,
         employeeId: newImportInvoice.employeeId,
-        totalExpense: totalExpense,
+        totalExpense: totalExpense || 0, //This WILL return 0 as it will be undefined, but i handle (by calculate again XD) this error in the service level. Fuck!! Who tf code this bruh
         importInvoiceDetails: newImportInvoice.importInvoiceDetails.map(detail => ({
-          ingredientId: detail.id,
+          ingredientId: detail.ingredientID,
           quantity: detail.quantity,
           price: detail.price,
           totalExpense: detail.totalExpense // This should match the 'total' calculated in the component

@@ -15,7 +15,7 @@ import { toVietnamese } from '@/lib/toVietnamese';
 const orderStore = useOrderStore();
 const invoiceStore = useInvoiceStore();
 const isDialogOpen = ref(false);
-const selectedOrder = ref<Order | null>(null);
+const selectedOrder = ref<string | undefined>(new Date().toISOString()); //aint no way this is null, don't let it be null/undefined lol
 
 interface Order {
     id: string;
@@ -25,6 +25,7 @@ interface Order {
     tableID: string;
     updateAt: string;
     createAt: string;
+    forDate: Date
     Table: {
         tableNumber: number;
     };
