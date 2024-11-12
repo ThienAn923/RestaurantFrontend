@@ -95,7 +95,6 @@ onMounted(async () => {
 
   console.log("Running onMounted Dashboard", JSON.stringify(incomeData.value.day));
 
-
 })
 
 const chartSelection = ref<incomePeriod>('day');

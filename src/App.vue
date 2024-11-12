@@ -14,7 +14,7 @@ import Table from './components/UserTable.vue'
   <div class="h-screen flex justify-center align-middle">
     <router-view />
   </div>
-  <Toaster />
+  <Toaster duration="2000" />
 </template>
 
 <script setup lang="ts">

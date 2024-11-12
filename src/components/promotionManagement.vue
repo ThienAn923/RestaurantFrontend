@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { usePromotionStore } from './pinia/promotion.store'
-import {ScrollArea} from '@/components/ui/scroll-area'
+import { ScrollArea } from '@/components/ui/scroll-area'
 const promotionStore = usePromotionStore()
 
 const isAddPromotionModalOpen = ref(false)
@@ -108,7 +108,11 @@ const getSortIcon = (column: string) => {
 }
 
 const filteredDishes = computed(() => {
-  return promotionStore.dishes.filter(dish => 
+  // console.log("I run from promotionManagement.vue 1111111111");
+  // await promotionStore.fetchDishes();
+  // console.log("I run from promotionManagement.vue 22222222");
+  // console.log("AHHHHHHHHHHHHHHHH", JSON.stringify(promotionStore.dishes));
+  return promotionStore.dishes.filter(dish =>
     dish.name.toLowerCase().includes(searchQuery.value.toLowerCase())
   )
 })
@@ -122,7 +126,8 @@ const filteredDishes = computed(() => {
         <Button @click="isAddPromotionModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
           <PlusIcon class="mr-2 h-4 w-4" /> Add Promotion For Invoice
         </Button>
-        <Button @click="isAddPromotionForDishModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
+        <Button @click="isAddPromotionForDishModalOpen = true" size="sm"
+          class="bg-blue-500 hover:bg-blue-600 text-white">
           <PlusIcon class="mr-2 h-4 w-4" /> Add Promotion For Dish
         </Button>
       </div>
@@ -168,13 +173,16 @@ const filteredDishes = computed(() => {
             <TableCell>{{ new Date(promotion.endDate).toLocaleDateString() }}</TableCell>
             <TableCell>{{ promotion.promotionType.type }}</TableCell>
             <TableCell class="text-right">
-              <Button variant="ghost" size="icon" @click="openInfoModal(promotion)" class="text-blue-500 hover:text-blue-600 hover:bg-blue-100">
+              <Button variant="ghost" size="icon" @click="openInfoModal(promotion)"
+                class="text-blue-500 hover:text-blue-600 hover:bg-blue-100">
                 <InfoIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" @click="openEditModal(promotion)" class="text-blue-500 hover:text-blue-600 hover:bg-blue-100">
+              <Button variant="ghost" size="icon" @click="openEditModal(promotion)"
+                class="text-blue-500 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" @click="deletePromotion(promotion.id)" class="text-red-500 hover:text-white hover:bg-red-500">
+              <Button variant="ghost" size="icon" @click="deletePromotion(promotion.id)"
+                class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
             </TableCell>
@@ -186,36 +194,22 @@ const filteredDishes = computed(() => {
     <!-- Pagination -->
     <div class="mt-4 flex items-center justify-between">
       <div class="text-sm text-gray-700">
-        Showing {{ (promotionStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(promotionStore.currentPage * 5, promotionStore.totalItems) }} of {{ promotionStore.totalItems }} entries
+        Showing {{ (promotionStore.currentPage - 1) * 5 + 1 }} to {{ Math.min(promotionStore.currentPage * 5,
+          promotionStore.totalItems) }} of {{ promotionStore.totalItems }} entries
       </div>
       <div class="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(promotionStore.currentPage - 1)"
-          :disabled="promotionStore.currentPage === 1"
-          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+        <Button variant="outline" size="sm" @click="goToPage(promotionStore.currentPage - 1)"
+          :disabled="promotionStore.currentPage === 1" class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronLeftIcon class="h-4 w-4" />
         </Button>
-        <Button
-          v-for="page in pageNumbers"
-          :key="page"
-          variant="outline"
-          size="sm"
+        <Button v-for="page in pageNumbers" :key="page" variant="outline" size="sm"
           :class="{ 'bg-blue-500 text-white': page === promotionStore.currentPage, 'text-gray-700 hover:bg-gray-100': page !== promotionStore.currentPage }"
-          @click="typeof page === 'number' ? goToPage(page) : null"
-          :disabled="typeof page !== 'number'"
-        >
+          @click="typeof page === 'number' ? goToPage(page) : null" :disabled="typeof page !== 'number'">
           {{ page }}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          @click="goToPage(promotionStore.currentPage + 1)"
+        <Button variant="outline" size="sm" @click="goToPage(promotionStore.currentPage + 1)"
           :disabled="promotionStore.currentPage === promotionStore.totalPages"
-          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+          class="text-gray-700 hover:bg-gray-100 disabled:opacity-50">
           <ChevronRightIcon class="h-4 w-4" />
         </Button>
       </div>
@@ -223,8 +217,8 @@ const filteredDishes = computed(() => {
 
     <!-- Add Promotion Modal -->
     <Dialog v-model:open="isAddPromotionModalOpen">
-      
-        <DialogContent class="h-full max-h-[660px] overflow-scroll">
+
+      <DialogContent class="h-full max-h-[660px] overflow-scroll">
         <DialogHeader>
           <DialogTitle>Add New Promotion for Invoice</DialogTitle>
           <DialogDescription>
@@ -265,12 +259,12 @@ const filteredDishes = computed(() => {
           </DialogFooter>
         </form>
       </DialogContent>
-      
+
     </Dialog>
 
     <!-- Add Promotion For Dish Modal -->
     <Dialog v-model:open="isAddPromotionForDishModalOpen">
-      <DialogContent >
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Promotion For Dish</DialogTitle>
           <DialogDescription>
@@ -301,12 +295,14 @@ const filteredDishes = computed(() => {
           <div class="space-y-2">
             <Label>Select Dishes</Label>
             <Input v-model="searchQuery" placeholder="Search dishes..." />
-            <div class="max-h-60 overflow-y-auto mt-2">
-              <div v-for="dish in filteredDishes" :key="dish.id" class="flex items-center space-x-2">
-                <Checkbox :id="dish.id" v-model="selectedDishes" :value="dish.id" />
-                <Label :for="dish.id">{{ dish.name }}</Label>
+            <ScrollArea class="h-[200px] w-full rounded-md border">
+              <div class="p-4">
+                <div v-for="dish in filteredDishes" :key="dish.id" class="flex items-center space-x-2 py-2">
+                  <Checkbox :id="dish.id" v-model="selectedDishes" :value="dish.id" />
+                  <Label :for="dish.id" class="flex-grow">{{ dish.name }}</Label>
+                </div>
               </div>
-            </div>
+            </ScrollArea>
           </div>
           <DialogFooter>
             <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Promotion For Dish</Button>
@@ -385,11 +381,13 @@ const filteredDishes = computed(() => {
           </div>
           <div v-if="currentPromotion.promotionType.type === 'invoice'">
             <Label class="font-bold">Minimum Spend:</Label>
-            <p>{{ currentPromotion.promotionType.details.minimumSpend ? `${currentPromotion.promotionType.details.minimumSpend.toLocaleString()} VND` : 'N/A' }}</p>
+            <p>{{ currentPromotion.promotionType.details.minimumSpend ?
+              `${currentPromotion.promotionType.details.minimumSpend.toLocaleString()} VND` : 'N/A' }}</p>
           </div>
           <div v-if="currentPromotion.promotionType.type === 'invoice'">
             <Label class="font-bold">Promotion Limit:</Label>
-            <p>{{ currentPromotion.promotionType.details.promotionLimit ? `${currentPromotion.promotionType.details.promotionLimit.toLocaleString()} VND` : 'Unlimited' }}</p>
+            <p>{{ currentPromotion.promotionType.details.promotionLimit ?
+              `${currentPromotion.promotionType.details.promotionLimit.toLocaleString()} VND` : 'Unlimited' }}</p>
           </div>
         </div>
         <DialogFooter>

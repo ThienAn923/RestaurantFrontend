@@ -117,7 +117,7 @@ const goToPage = (page: number) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead @click="sortTable('providerName')" class="cursor-pointer">
+            <TableHead @click="sortTable('ingredientTypeName')" class="cursor-pointer">
               <div class="flex items-center justify-between">
                 <span>Tên Loại Nguyên Liệu</span>
                 <component :is="getSortIcon('ingredientTypeName') || 'div'" class="w-4 h-4 ml-2"
@@ -126,12 +126,12 @@ const goToPage = (page: number) => {
             </TableHead>
             <TableHead @click="sortTable('ingredientTypeDescription')" class="cursor-pointer">
               <div class="flex items-center justify-between">
-                <span>Địa Chỉ Mail</span>
+                <span>Mô tả</span>
                 <component :is="getSortIcon('ingredientTypeDescription') || 'div'" class="w-4 h-4 ml-2"
                   :class="{ 'text-transparent': !getSortIcon('ingredientTypeDescription') }" />
               </div>
             </TableHead>
-            <TableHead @click="sortTable('providerName')" class="cursor-pointer">
+            <TableHead @click="sortTable('createAt')" class="cursor-pointer">
               <div class="flex items-center justify-between">
                 <span>Ngày Tạo</span>
                 <component :is="getSortIcon('createAt') || 'div'" class="w-4 h-4 ml-2"

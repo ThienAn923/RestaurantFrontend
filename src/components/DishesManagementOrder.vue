@@ -19,7 +19,7 @@ import { useDishStore } from './pinia/dish.store'
 import { useOrderStore } from './pinia/order.store'
 import { formatCurrency } from '@/lib/formatMoney.js'
 import { useToast } from "@/components/ui/toast";
-import TestComponent from './testComponent.vue'
+import TestComponent from './testComponent.vue';
 
 
 
@@ -239,7 +239,13 @@ const addDishToOrder = (dish: Dish) => {
     quantity: 1,
     image: dish.images[0] || 'vite.svg',
   };
-
+  if (dish.available === false) {
+    toast({
+      title: 'Món ăn không còn phục vụ',
+      description: 'Vui lòng chọn món khác',
+    });
+    return;
+  }
   const existingItem = orderItems.value.find(item => item.id === dish.id);
   if (existingItem) {
     existingItem.quantity += 1;
@@ -253,7 +259,9 @@ const subtotal = computed(() =>
   orderItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
 )
 
-const discount = ref(0)
+const discount = computed(() =>
+  orderItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
+)
 
 const updateQuantity = (id: string, newQuantity: number) => {
   if (newQuantity < 1) return
@@ -308,6 +316,7 @@ const removeItem = (id: String) => {
 }
 
 
+
 </script>
 
 <template>
@@ -352,7 +361,8 @@ const removeItem = (id: String) => {
 
       <div class="flex h-screen bg-gray-100">
         <!-- Dish Management Panel -->
-        <div class="flex-1 p-6 overflow-auto">
+
+        <ScrollArea class="flex-1 p-6 overflow-auto">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card v-for="dish in dishes" :key="dish.id"
               class="bg-white rounded-lg shadow-md overflow-hidden transition-shadow hover:shadow-lg">
@@ -362,7 +372,8 @@ const removeItem = (id: String) => {
                 <h2 class="text-xl font-semibold mb-2">{{ dish.name }}</h2>
                 <p class="text-gray-600 mb-2">{{ dish.description }}</p>
                 <div class="flex justify-between items-center mb-4">
-                  <span class="text-lg font-bold">{{ dish.costs?.length > 0 ? formatCurrency(dish.costs[0].cost) : 'N/A'
+                  <span class="text-lg font-bold">{{ dish.costs?.length > 0 ? formatCurrency(dish.costs[0].cost) :
+                    'N/A'
                     }}</span>
                   <span :class="[
                     'px-2 py-1 rounded-full text-sm',
@@ -376,92 +387,96 @@ const removeItem = (id: String) => {
             </Card>
           </div>
 
-        </div>
+        </ScrollArea>
 
         <!-- Order Panel -->
-        <div class="w-[400px] bg-white border-l border-gray-200 overflow-auto">
-          <div class="p-6">
-            <h2 class="text-xl font-semibold mb-6">Lập Đơn</h2>
+        <scrollArea>
+          <div class="w-[400px] bg-white border-l border-gray-200 overflow-auto">
+            <div class="p-6">
+              <h2 class="text-xl font-semibold mb-6">Lập Đơn</h2>
 
-            <Select v-model="selectedTable" class="w-full mb-6">
-              <SelectTrigger>
-                <SelectValue placeholder="Select a table" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="table in tables" :key="table.id" :value="table.id">
-                  {{ table.tableNumber }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+              <div class="flex items-center space-x-4 mb-6">
+                <Select v-model="selectedTable" class="w-full">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a table" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem v-for="table in tables" :key="table.id" :value="table.id">
+                      {{ table.tableNumber }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
 
-            <TestComponent @date-selected="getSelectedDate" ref="testConponentRef" />
+                <TestComponent @date-selected="getSelectedDate" ref="testConponentRef" />
+              </div>
 
-            <div class="grid grid-cols-[2fr_60px_60px] gap-4 mb-4">
-              <div class="text-sm font-medium">Item</div>
-              <div class="text-sm font-medium text-center">Qty</div>
-              <div class="text-sm font-medium text-right">Price</div>
-            </div>
+              <div class="grid grid-cols-[2fr_60px_60px] gap-4 mb-4">
+                <div class="text-sm font-medium">Item</div>
+                <div class="text-sm font-medium text-center">Qty</div>
+                <div class="text-sm font-medium text-right">Price</div>
+              </div>
 
-            <ScrollArea class="h-[400px] -mr-6 pr-6">
-              <div class="space-y-4">
-                <div v-for="item in orderItems" :key="item.id"
-                  class="grid grid-cols-[2fr_60px_60px] gap-4 items-center">
-                  <div class="flex gap-3 cursor-pointer" @click="removeItem(item.id)">
-                    <img :src="item.image" :alt="item.name" class="w-10 h-10 rounded-lg object-cover" />
-                    <div>
-                      <div class="text-sm font-medium">{{ item.name }}</div>
-                      <div class="text-sm text-gray-500">{{ formatCurrency(item.price) }}</div>
+              <ScrollArea class="h-[400px] -mr-6 pr-6">
+                <div class="space-y-4">
+                  <div v-for="item in orderItems" :key="item.id"
+                    class="grid grid-cols-[2fr_60px_60px] gap-4 items-center">
+                    <div class="flex gap-3 cursor-pointer" @click="removeItem(item.id)">
+                      <img :src="item.image" :alt="item.name" class="w-10 h-10 rounded-lg object-cover" />
+                      <div>
+                        <div class="text-sm font-medium">{{ item.name }}</div>
+                        <div class="text-sm text-gray-500">{{ formatCurrency(item.price) }}</div>
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-center">
+                      <div class="flex items-center border rounded">
+                        <button @click="updateQuantity(item.id, item.quantity - 1)"
+                          class="w-6 h-6 flex items-center justify-center hover:bg-gray-100">
+                          <Minus class="w-3 h-3" />
+                        </button>
+                        <Input type="number" :value="item.quantity"
+                          @input="e => updateQuantity(item.id, parseInt(e.target.value))"
+                          class="w-8 h-6 text-center p-0 border-none" />
+                        <button @click="updateQuantity(item.id, item.quantity + 1)"
+                          class="w-6 h-6 flex items-center justify-center hover:bg-gray-100">
+                          <Plus class="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                    <div class="text-sm text-right">
+                      {{ formatCurrency(item.price * item.quantity) }}
                     </div>
                   </div>
-                  <div class="flex items-center justify-center">
-                    <div class="flex items-center border rounded">
-                      <button @click="updateQuantity(item.id, item.quantity - 1)"
-                        class="w-6 h-6 flex items-center justify-center hover:bg-gray-100">
-                        <Minus class="w-3 h-3" />
-                      </button>
-                      <Input type="number" :value="item.quantity"
-                        @input="e => updateQuantity(item.id, parseInt(e.target.value))"
-                        class="w-8 h-6 text-center p-0 border-none" />
-                      <button @click="updateQuantity(item.id, item.quantity + 1)"
-                        class="w-6 h-6 flex items-center justify-center hover:bg-gray-100">
-                        <Plus class="w-3 h-3" />
-                      </button>
-                    </div>
+                </div>
+              </ScrollArea>
+
+              <div class="mt-6">
+                <Textarea v-model="orderNote" placeholder="Order note..." class="min-h-[100px] border-gray-200" />
+              </div>
+
+              <div class="mt-6 space-y-2">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="text-gray-500">Tổng Khuyến Mãi Cho Món Ăn</span>
+                    <AlertCircle class="w-4 h-4 text-gray-400" />
                   </div>
-                  <div class="text-sm text-right">
-                    {{ formatCurrency(item.price * item.quantity) }}
+                  <!-- <span>{{ discount.toFixed(2) }}</span> -->
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="text-gray-500">Tổng Cộng </span>
+                    <AlertCircle class="w-4 h-4 text-gray-400" />
                   </div>
+                  <span>{{ formatCurrency(subtotal) }}</span>
                 </div>
               </div>
-            </ScrollArea>
 
-            <div class="mt-6">
-              <Textarea v-model="orderNote" placeholder="Order note..." class="min-h-[100px] border-gray-200" />
+              <Button class="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white"
+                :disabled="!selectedTable || orderItems.length === 0" @click="makeOrder">
+                Hoàn Thành Đơn
+              </Button>
             </div>
-
-            <div class="mt-6 space-y-2">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <span class="text-gray-500">Discount</span>
-                  <AlertCircle class="w-4 h-4 text-gray-400" />
-                </div>
-                <!-- <span>{{ discount.toFixed(2) }}</span> -->
-              </div>
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <span class="text-gray-500">Sub total</span>
-                  <AlertCircle class="w-4 h-4 text-gray-400" />
-                </div>
-                <span>{{ formatCurrency(subtotal) }}</span>
-              </div>
-            </div>
-
-            <Button class="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white"
-              :disabled="!selectedTable || orderItems.length === 0" @click="makeOrder">
-              Hoàn Thành Đơn
-            </Button>
           </div>
-        </div>
+        </scrollArea>
       </div>
 
 

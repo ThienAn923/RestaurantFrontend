@@ -4,7 +4,7 @@ import { ChevronLeftIcon, ChevronRightIcon, InfoIcon, ChevronUpIcon, ChevronDown
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { format } from 'date-fns';
 import { useInvoiceStore } from './pinia/invoice.store'
@@ -20,7 +20,11 @@ interface InvoiceDetail {
   createAt: Date;
   salePerUnit: undefined | number;
   promotionAfterDishID?: string | null;
+  originalPrice: number;
+  promotionName?: string;
+  discount?: number;
 }
+
 interface Invoice {
   id: string;
   invoiceDate: Date;
@@ -33,76 +37,32 @@ interface Invoice {
   tableID: string;
   tableNumber: number;
   promotionID?: string | undefined;
-  promotionName: string; //this have a default value "No promotion"
+  promotionName: string;
   invoiceDetails: InvoiceDetail[];
+  finalTotalCost: number;
 }
 
 const isDetailModalOpen = ref(false)
-// const currentInvoice = ref<any>(null)
-// const currentInvoiceDetails = ref<any[]>([])
-// const currentInvoice = ref({
-//   id: '',
-//   invoiceDate: new Date(),
-//   totalCost: 0,
-//   orderNote: undefined,
-//   totalPromotion: undefined,
-//   invoiceStatus: false,
-//   employeeID: '',
-//   employeeName: '',
-//   tableID: '',
-//   tableNumber: 0,
-//   promotionID: undefined,
-//   promotionName:'',
-//   invoiceDetails: InvoiceDetail[];
-// })
-
 const currentInvoice = ref<Invoice | null>(null)
-
-
-
-// const currentInvoiceDetails = ref<InvoiceDetail[]>([
-//   {
-//     id: '',
-//     dishName: '',
-//     quantity: 0,
-//     totalCost: 0,
-//     createAt: new Date(),
-//     salePerUnit: undefined,
-//     promotionAfterDishID: undefined
-//   }
-// ]);
 
 const statusOptions = [
   { value: 'true', label: 'Đã trả tiền' },
   { value: 'false', label: 'Chưa trả tiền' },
 ]
 
-
 const searchQuery = ref('')
 const filterStatus = ref('')
-const sortColumn = ref('ingredientName')
+const sortColumn = ref('invoiceDate')
 const sortOrder = ref<'asc' | 'desc'>('asc')
 
 onMounted(async () => {
   await invoiceStore.fetchInvoices(1);
-  console.log(invoiceStore.invoices);
 })
 
 const openInvoiceDetail = (invoice: Invoice) => {
   currentInvoice.value = { ...invoice }
   isDetailModalOpen.value = true
 }
-// const pageNumbers = computed(() => {
-//   const pages = []
-//   for (let i = 1; i <= invoiceStore.totalPages; i++) {
-//     pages.push(i)
-//   }
-//   return pages
-// })
-
-// const formatDate = (dateString: string) => {
-//   return format(new Date(dateString), 'yyyy-MM-dd HH:mm:ss')
-// }
 
 const pageNumbers = computed(() => {
   const totalPages = invoiceStore.totalPages
@@ -152,19 +112,16 @@ const resetFilters = () => {
 }
 
 watch([filterStatus], () => {
-  // alert(filterStatus.value)
   invoiceStore.setFilter(filterStatus.value);
   invoiceStore.fetchInvoices(1)
 })
+
 watch([searchQuery], () => {
-  // alert(searchQuery.value)
   invoiceStore.setSearch(searchQuery.value);
   invoiceStore.fetchInvoices(1)
 })
 
-
-
-const formatDate = (dateString: string): string => {
+const formatDate = (dateString: string | Date): string => {
   return format(new Date(dateString), 'yyyy-MM-dd HH:mm:ss');
 };
 </script>
@@ -211,7 +168,6 @@ const formatDate = (dateString: string): string => {
               </div>
             </TableHead>
             <TableHead>Ghi chú</TableHead>
-            <!-- <TableHead>Nhân viên lập đơn</TableHead> -->
             <TableHead>Bàn</TableHead>
             <TableHead>Khuyến mãi</TableHead>
             <TableHead>Tỷ lệ</TableHead>
@@ -221,16 +177,13 @@ const formatDate = (dateString: string): string => {
         </TableHeader>
         <TableBody>
           <TableRow v-for="invoice in invoiceStore.invoices" :key="invoice.id">
-            <TableCell>{{ formatDate(invoice.invoiceDate.toString()) }}</TableCell>
+            <TableCell>{{ formatDate(invoice.invoiceDate) }}</TableCell>
             <TableCell class="text-right">{{ formatCurrency(invoice.totalCost) }}</TableCell>
             <TableCell>{{ invoice.orderNote || 'N/A' }}</TableCell>
-            <!-- <TableCell>{{ invoice.employeeName }}</TableCell> -->
             <TableCell>{{ invoice.tableNumber }}</TableCell>
             <TableCell>{{ invoice.promotionName || 'None' }}</TableCell>
             <TableCell>{{ invoice.discount + "%" || 'None' }}</TableCell>
-            <TableCell class="text-right">{{ formatCurrency((invoice.totalCost - (invoice.totalCost * 15 / 100))) ||
-              'None'
-              }}</TableCell>
+            <TableCell class="text-right">{{ formatCurrency((invoice.finalTotalCost)) || 'None' }}</TableCell>
             <TableCell class="text-right">
               <Button variant="ghost" size="icon" @click="openInvoiceDetail(invoice)">
                 <InfoIcon class="h-4 w-4" />
@@ -267,7 +220,7 @@ const formatDate = (dateString: string): string => {
 
     <!-- Invoice Detail Modal -->
     <Dialog v-model:open="isDetailModalOpen">
-      <DialogContent class="sm:max-w-[700px]">
+      <DialogContent class="sm:max-w-[1000px]"> <!-- Increased max-width here -->
         <DialogHeader>
           <DialogTitle>Invoice Details</DialogTitle>
           <DialogDescription>
@@ -275,55 +228,115 @@ const formatDate = (dateString: string): string => {
           </DialogDescription>
         </DialogHeader>
         <div v-if="currentInvoice" class="mt-6 space-y-6">
-          <div class="grid grid-cols-2 gap-x-12 gap-y-4">
-            <div>
-              <p class="font-semibold">Ngày lập:</p>
-              <p>{{ formatDate(currentInvoice.invoiceDate) }}</p>
+          <div class="relative bg-white shadow-lg sm:rounded-3xl sm:p-10">
+            <div class="max-w-3xl mx-auto">
+              <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center">
+                  <img
+                    src="https://logowik.com/content/uploads/images/restaurant9491.logowik.com.webp?height=80&width=80?height=80&width=80"
+                    alt="N&A Restaurant Logo" class="h-20 w-20 mr-4" />
+                  <div>
+                    <h1 class="text-3xl font-extrabold text-gray-900">N&A Restaurant</h1>
+                    <p class="text-sm text-gray-600">Số 405 đường Lý Tự Trọng P.An Khánh Q.Ninh kiều tp.Cần Thơ</p>
+                    <p class="text-sm text-gray-600">Phone: (+84) 7575-9999</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <h2 class="text-2xl font-bold text-gray-900">Hóa Đơn</h2>
+                  <p class="text-sm text-gray-600">#{{ currentInvoice.id }}</p>
+                </div>
+              </div>
+
+              <div class="border-t border-b border-gray-200 py-4 mb-6">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Ngày lập:</p>
+                    <p class="text-sm text-gray-900">{{ formatDate(currentInvoice.invoiceDate) }}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Bàn:</p>
+                    <p class="text-sm text-gray-900">{{ currentInvoice.tableNumber }}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Nhân viên lập:</p>
+                    <p class="text-sm text-gray-900">{{ currentInvoice.employeeName }}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Khuyến mãi:</p>
+                    <p class="text-sm text-gray-900">{{ currentInvoice.promotionName }}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Tỷ Lệ Khuyến mãi:</p>
+                    <p class="text-sm text-gray-900">{{ currentInvoice.discount }}%</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Ghi Chú:</p>
+                    <p class="text-sm text-gray-900">{{ currentInvoice.orderNote || "Không có ghi chú" }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-3">Chi tiết hóa đơn</h3>
+                <Table v-if="currentInvoice.invoiceDetails.length > 0">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tên món</TableHead>
+                      <TableHead>Số lượng</TableHead>
+                      <TableHead>Tên khuyến mãi</TableHead>
+                      <TableHead>Tỷ lệ khuyến mãi</TableHead>
+                      <TableHead>Giá Gốc/Đơn Vị</TableHead>
+                      <TableHead>Giá sau cùng</TableHead>
+                      <TableHead>Tổng Cộng</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow v-for="detail in currentInvoice.invoiceDetails" :key="detail.id">
+                      <TableCell>{{ detail.dishName }}</TableCell>
+                      <TableCell>{{ detail.quantity }}</TableCell>
+                      <TableCell>{{ detail.promotionName || 'Không' }}</TableCell>
+                      <TableCell>{{ detail.discount }}%</TableCell>
+                      <TableCell>{{ formatCurrency(detail.originalPrice) }}</TableCell>
+                      <TableCell>{{ formatCurrency(detail.totalCost / detail.quantity) }}</TableCell>
+                      <TableCell>{{ formatCurrency(detail.totalCost) }}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+                <p v-else class="text-gray-500">No details available for this invoice.</p>
+              </div>
+
+              <div class="flex justify-between items-center mb-8">
+                <div class="text-sm">
+                  <p class="font-medium text-gray-600">Tổng cộng:</p>
+                  <p class="font-medium text-gray-600">Giảm giá:</p>
+                  <p class="font-bold text-gray-900">Tổng sau cùng:</p>
+                </div>
+                <div class="text-sm text-right">
+                  <p>{{ formatCurrency(currentInvoice.totalCost) }}</p>
+                  <p>{{ formatCurrency((currentInvoice.discount / 100 *
+                    currentInvoice.totalCost) || 0) }}</p>
+                  <p class="font-bold">{{ formatCurrency(currentInvoice.finalTotalCost) }}</p>
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="text-xs text-gray-600 mb-1">Quét để nhận điểm thưởng:</p>
+                  <img
+                    src="https://logowik.com/content/uploads/images/restaurant9491.logowik.com.webp?height=80&width=80.svg?height=80&width=80"
+                    alt="QR Code" class="h-20 w-20" />
+                </div>
+                <div class="text-right">
+                  <p class="text-xs text-gray-600 mb-1">Đã bao gồm thuế VAT </p>
+                  <!-- <p class="text-sm text-gray-900">{{ currentInvoice.orderNote || 'N/A' }}</p> -->
+                </div>
+              </div>
+
+              <div class="mt-8 text-center">
+                <p class="text-xs text-gray-600">Cảm ơn quý khách đã dùng bữa tại nhà hàng chúng tôi!</p>
+                <p class="text-xs text-gray-600">Hẹn gặp lại quý khách trong thời gian sớm nhất.</p>
+              </div>
             </div>
-            <div>
-              <p class="font-semibold">Tổng cộng:</p>
-              <p>{{ currentInvoice.totalCost }}</p>
-            </div>
-            <div>
-              <p class="font-semibold">Ghi chú:</p>
-              <p>{{ currentInvoice.orderNote || 'N/A' }}</p>
-            </div>
-            <div>
-              <p class="font-semibold">Nhân viên lập:</p>
-              <p>{{ currentInvoice.employeeName }}</p>
-            </div>
-            <div>
-              <p class="font-semibold">Bàn:</p>
-              <p>{{ currentInvoice.tableNumber }}</p>
-            </div>
-            <div>
-              <p class="font-semibold">Khuyến mãi:</p>
-              <p>{{ currentInvoice.promotionName }}</p>
-            </div>
-          </div>
-          <div>
-            <h3 class="text-lg font-semibold mb-3">Invoice Details</h3>
-            <Table v-if="currentInvoice.invoiceDetails.length > 0">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tên món</TableHead>
-                  <TableHead>Số lượng</TableHead>
-                  <TableHead>Tổng cộng</TableHead>
-                  <TableHead>Giá một đơn vị</TableHead>
-                  <TableHead>ID khuyến mãi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow v-for="detail in currentInvoice.invoiceDetails" :key="detail.id">
-                  <TableCell>{{ detail.dishName }}</TableCell>
-                  <TableCell>{{ detail.quantity }}</TableCell>
-                  <TableCell>{{ detail.totalCost }}</TableCell>
-                  <TableCell>{{ detail.salePerUnit }}</TableCell>
-                  <TableCell>{{ detail.promotionAfterDishID || 'Không' }}</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-            <p v-else class="text-gray-500">No details available for this invoice.</p>
           </div>
         </div>
       </DialogContent>

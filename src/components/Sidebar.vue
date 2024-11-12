@@ -51,16 +51,18 @@ const allSidebarItems = ref<MenuItem[]>([
       {
         title: 'Quản Lý Món Ăn',
         isOpen: false,
-        requiredRole: [ROLES.RECEPTIONIST, ROLES.ADMIN, ROLES.CHEF],
+        requiredRole: [ROLES.RECEPTIONIST, ROLES.ADMIN, ROLES.CHEF, ROLES.SERVER],
         items: [
-          { title: 'Dish', href: '/dishes', requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST, ROLES.CHEF] },
-          { title: 'DishType', href: '/dishType', requiredRole: [ROLES.ADMIN, ROLES.CHEF, ROLES.RECEPTIONIST] },
-          { title: 'Table', href: '/table', requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST, ROLES.CHEF] },
-          { title: 'Order', href: '/order', requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST, ROLES.CHEF] },
-          { title: 'Invoice', href: '/invoice', requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST] },
+          { title: 'Món Ăn', href: '/dishes', requiredRole: [ROLES.ADMIN, ROLES.CHEF] },
+          { title: 'Đặt Món', href: '/DishesOrder', requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST, ROLES.SERVER] },
+          { title: 'Loại Món', href: '/dishType', requiredRole: [ROLES.ADMIN, ROLES.CHEF, ROLES.RECEPTIONIST, ROLES.SERVER] },
+          { title: 'Bàn', href: '/table', requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST, ROLES.CHEF, ROLES.SERVER] },
+          { title: 'Quản Lý Đơn Món', href: '/order', requiredRole: [ROLES.ADMIN, ROLES.CHEF, ROLES.SERVER] },
+          { title: 'Thanh Toán Đơn Món', href: '/orderCompleted', requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST] },
+          { title: 'Hóa Đơn', href: '/invoice', requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST, ROLES.SERVER] },
         ]
       },
-      { title: 'Quản Lý Khuyến Mãi', href: '/promotion', requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST] },
+      { title: 'Quản Lý Khuyến Mãi', href: '/promotion', requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST, ROLES.SERVER] },
       {
         title: 'Quản Lý Nguyên Liệu',
         isOpen: false,
@@ -82,9 +84,10 @@ const allSidebarItems = ref<MenuItem[]>([
           { title: 'Phòng Ban', href: '/department', requiredRole: [ROLES.ADMIN] },
         ]
       },
+      { title: 'Quản Lý Chi Tiêu', href: '/expense', requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST] },
     ]
   },
-  { title: 'Cài Đặt', icon: Settings, href: '/settings', requiredRole: [ROLES.ADMIN, ROLES.CHEF, ROLES.RECEPTIONIST] },
+  { title: 'Cài Đặt', icon: Settings, href: '/settings', requiredRole: [ROLES.ADMIN, ROLES.CHEF, ROLES.RECEPTIONIST, ROLES.SERVER] },
 ])
 
 function mapRoleToPermission(role: number): string {

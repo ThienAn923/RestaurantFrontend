@@ -29,7 +29,7 @@ interface Promotion {
 
 export const usePromotionStore = defineStore('promotion', () => {
   const promotions = ref<Promotion[]>([])
-  const dishes = ref<{ id: string, name: string }[]>([])
+  const dishes = ref<Dish[]>([]);
   const currentPage = ref(1)
   const totalItems = ref(0)
   const itemsPerPage = 5
@@ -54,7 +54,8 @@ export const usePromotionStore = defineStore('promotion', () => {
     try {
       const response = await fetch('http://localhost:3000/api/dish')
       const data = await response.json()
-      dishes.value = data
+      dishes.value = data.data
+      console.log("Running fetchDishes");
     } catch (error) {
       console.error('Error fetching dishes:', error)
     }
@@ -116,7 +117,7 @@ export const usePromotionStore = defineStore('promotion', () => {
 
   return {
     promotions,
-    // dishes,
+    dishes,
     currentPage,
     totalItems,
     totalPages,

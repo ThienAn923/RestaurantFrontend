@@ -13,19 +13,38 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useDishTypeStore } from './pinia/dishType.store'
+import { useAuthStore } from './pinia/auth'
+import { hasPermission, ROLES } from './utils/permission'
+import { useToast } from "./ui/toast"
 
 const dishTypeStore = useDishTypeStore()
+const authStore = useAuthStore()
+const { toast } = useToast()
 
 const isAddModalOpen = ref(false)
 const isEditModalOpen = ref(false)
 const currentDishType = ref({ id: '', DishTypeName: '', DishTypeDescription: '', DishTypeAvailable: true, createAt: '' })
 const newDishType = ref({ DishTypeName: '', DishTypeDescription: '', DishTypeAvailable: true })
 
+function checkPermission() {
+  const requiredRoles = [ROLES.ADMIN]; // Define the roles required to add a dish type
+  console.log(authStore.userRole, requiredRoles);
+  if (!hasPermission(authStore.userRole, requiredRoles)) {
+    toast({
+      title: 'Forbidden',
+      description: 'You do not have permission to add, edit, or delete a dish type',
+    });
+    return false;
+  }
+  return true;
+}
+
 onMounted(() => {
   dishTypeStore.fetchDishTypes(1)
 })
 
 const addDishType = async () => {
+  if (!checkPermission()) return;
   console.log('Adding dish type:', newDishType.value) // debug stuff, dont mind this line
   await dishTypeStore.addDishType(newDishType.value)
   isAddModalOpen.value = false
@@ -33,17 +52,24 @@ const addDishType = async () => {
 }
 
 const openEditModal = (dishType: { id: string; DishTypeName: string; DishTypeDescription: string; DishTypeAvailable: boolean; createAt: string }) => {
+  if (!checkPermission()) return;
   currentDishType.value = { ...dishType }
   isEditModalOpen.value = true
 }
 
 const editDishType = async () => {
+  if (!checkPermission()) return;
   await dishTypeStore.updateDishType(currentDishType.value)
   isEditModalOpen.value = false
 }
 
 const deleteDishType = async (id: string) => {
+  if (!checkPermission()) return;
   await dishTypeStore.deleteDishType(id)
+}
+const openAddDishTypeModal = () => {
+  if (!checkPermission()) return;
+  isAddModalOpen.value = true
 }
 
 const pageNumbers = computed(() => {
@@ -132,7 +158,7 @@ watch([searchQuery], () => {
   <div class="h-full w-full bg-gray-50 overflow-auto p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">Loại Món Ăn</h1>
-      <Button @click="isAddModalOpen = true" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
+      <Button @click="openAddDishTypeModal()" size="sm" class="bg-blue-500 hover:bg-blue-600 text-white">
         <PlusIcon class="mr-2 h-4 w-4" /> Thêm Loại Món Ăn
       </Button>
     </div>
