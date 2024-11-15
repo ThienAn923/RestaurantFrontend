@@ -188,8 +188,9 @@ watch([filterStatus, filterType], async () => {
 //it's both get and format
 const getSelectedDate = (date: any) => {
   const { year, month, day } = date;
-  const formattedDate = new Date(year, month - 1, day).toISOString();
+  const formattedDate = new Date(year, month - 1, day).toISOString(); // i have no idea why i have to +1 to get the correct value lmao
   selectedDate.value = formattedDate;
+  console.log("Selected date from DishesManagementOrder: ", formattedDate);
   // console.log("Selected date from DishesManagementOrder: ", formattedDate);
 }
 
@@ -280,6 +281,10 @@ const makeOrder = async () => {
     console.error('EmployeeID is not available');
     return;
   }
+
+  watch(() => selectedDate.value, (newVal) => {
+    console.log("selectedDate.value changed to:", newVal);
+  });
 
   try {
     const response = await axiosInstance.post<ApiResponse<Order>>("/order", {
@@ -456,8 +461,8 @@ const removeItem = (id: String) => {
               <div class="mt-6 space-y-2">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
-                    <span class="text-gray-500">Tổng Khuyến Mãi Cho Món Ăn</span>
-                    <AlertCircle class="w-4 h-4 text-gray-400" />
+                    <!-- <span class="text-gray-500">Tổng Khuyến Mãi Cho Món Ăn</span> -->
+                    <!-- <AlertCircle class="w-4 h-4 text-gray-400" /> -->
                   </div>
                   <!-- <span>{{ discount.toFixed(2) }}</span> -->
                 </div>

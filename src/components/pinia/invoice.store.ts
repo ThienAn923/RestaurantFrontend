@@ -210,6 +210,32 @@ const fetchIncomeData = async () => {
 //   }
 // };
 
+  interface CustomIncomeData {
+    custom: [
+        {
+          timeUnit: '',
+          income: 0,
+          expense: 0,
+          ingredientCost: 0,
+        },
+      ]
+  }
+
+  const fetchCustomIncomeData = async (startDate: Date, endDate: Date, step: number) => {
+    try{
+      const response = await axiosInstance.get<ApiResponse<CustomIncomeData>>(`/invoice/getCustomIncome`, {
+        params: {
+          startDate: startDate,
+          endDate: endDate,
+          step: step
+        }
+      })
+      return response
+    }catch (error) {
+      console.error('Error fetching custom income data:', error)
+    }
+  }
+
 
   
   const setSorting = (column: string, order: 'asc' | 'desc') => {
@@ -240,5 +266,6 @@ const fetchIncomeData = async () => {
     fetchRecentInvoice,
     getTopDishes,
     fetchIncomeData,
+    fetchCustomIncomeData,
   }
 })
