@@ -7,16 +7,10 @@
       </div>
       <div class="h-[calc(100vh-64px)] overflow-y-auto">
         <nav class="space-y-1 p-2">
-          <button
-            v-for="client in clientStore.clients"
-            :key="client.email"
-            @click="selectUser(client)"
-            :class="{
-              'bg-accent text-accent-foreground': selectedUser?.id === client.id,
-              'hover:bg-accent/50': selectedUser?.id !== client.id
-            }"
-            class="w-full flex items-center space-x-3 p-2 rounded-lg transition-colors"
-          >
+          <button v-for="client in clientStore.clients" :key="client.email" @click="selectUser(client)" :class="{
+            'bg-accent text-accent-foreground': selectedUser?.id === client.id,
+            'hover:bg-accent/50': selectedUser?.id !== client.id
+          }" class="w-full flex items-center space-x-3 p-2 rounded-lg transition-colors">
             <span>{{ client.initials }}</span>
             <span class="text-sm font-medium">{{ client.email }}</span>
           </button>
@@ -32,35 +26,26 @@
       </header>
       <div class="flex-1 p-4 overflow-y-auto">
         <div class="space-y-4">
-          <div
-            v-for="message in messageStore.messages"
-            :key="message.id"
-            :class="{
-              'flex justify-end': message.senderType === true,   
-              'flex justify-start': message.senderType === false,    
-          }"
-          >
-            <div
-              :class="{
-                'bg-primary text-primary-foreground': message.senderType === false,
-                'bg-muted': message.senderType === true,
-              }"
-              class="rounded-lg px-4 py-2 max-w-sm"
-            >
+          <div v-for="message in messageStore.messages" :key="message.id" :class="{
+            'flex justify-end': message.senderType === true,
+            'flex justify-start': message.senderType === false,
+          }">
+            <div :class="{
+              'bg-primary text-primary-foreground': message.senderType === false,
+              'bg-muted': message.senderType === true,
+            }" class="rounded-lg px-4 py-2 max-w-sm">
               <p>{{ message.text }}</p>
-              <p class="text-xs text-muted-foreground mt-1">{{ new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}</p>
+              <p class="text-xs text-muted-foreground mt-1">{{ new Date(message.createdAt).toLocaleTimeString([], {
+                hour: '2-digit', minute: '2-digit'
+              }) }}</p>
             </div>
           </div>
         </div>
       </div>
       <footer class="p-4 border-t border-border">
         <form @submit.prevent="handleSendMessage" class="flex space-x-2">
-          <input
-            v-model="newMessage"
-            type="text"
-            placeholder="Nhập tin nhắn..."
-            class="flex-1 p-2 border border-border rounded-lg"
-          />
+          <input v-model="newMessage" type="text" placeholder="Nhập tin nhắn..."
+            class="flex-1 p-2 border border-border rounded-lg" />
           <button type="submit" class="bg-primary text-white p-2 rounded-lg flex items-center">
             <span>Gửi</span>
           </button>
