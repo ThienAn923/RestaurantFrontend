@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, watchEffect } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -13,11 +13,15 @@ import { useDishStore } from './pinia/dish.store'
 import { SearchIcon, Edit, Trash2, Plus } from 'lucide-vue-next'
 import CardFooter from './ui/card/CardFooter.vue'
 import { formatCurrency } from '../lib/formatMoney'
+import { uploadImage } from './utils/cloudinary'
+import { Progress } from '@/components/ui/progress'
+import { useToast } from './ui/toast'
 
 
 const dishStore = useDishStore();
 const dishes = ref<Dish[]>([]);
 const dishTypes = ref<DishType[]>([]);
+const { toast } = useToast()
 
 onMounted(async () => {
   dishStore.fetchDish(1);
@@ -29,6 +33,7 @@ onMounted(async () => {
     // If the dish has images, use the link of the first image as the imageUrl
     // If the dish doesn't have images, use a default image link
     const imageUrl = dish.images.length > 0 ? dish.images[0].Link : 'vite.svg';
+    // console.log("AHHHHHHHHHHHHHH", dish.images[0]?.Link);
     dish.images[0] = imageUrl;
     // Return a new object that has all the original dish properties plus imageUrl
     return { ...dish };
@@ -82,7 +87,15 @@ interface Dish {
   createAt: string;
   promotionID: string | null;
   costs: Cost[];
-  images: string[];
+  images: Image[];
+}
+
+interface Image {
+  id: string;
+  Link: string;
+  createAt: string;
+  updateAt: string;
+  dishId: string;
 }
 
 const isAddDishModalOpen = ref(false)
@@ -144,7 +157,7 @@ const newDish = ref({
   price: '',
   available: true,
   dishType: '',
-  image: null as File | null
+  images: [] as File[]
 })
 
 const openAddDishModal = () => {
@@ -161,22 +174,73 @@ const openAddDishTypeModal = () => {
 }
 
 
+const uploadedImageUrls = ref<string[]>([]);
+const uploadProgress = ref(0);
 
-const handleImageUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement
+// const handleImageUpload = async (event: Event) => {
+//   const target = event.target as HTMLInputElement;
+//   if (target.files) {
+//     const files = Array.from(target.files);
+//     newDish.value.images = files;
+
+//     try {
+//       const urls = await Promise.all(files.map(file => uploadImage(file)));
+//       uploadedImageUrls.value = urls;
+//       console.log('Images uploaded successfully:', urls);
+//     } catch (error) {
+//       console.error('Error uploading images:', error);
+//     }
+//   }
+// };
+const handleImageUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
   if (target.files) {
-    newDish.value.image = target.files[0]
+    const files = Array.from(target.files);
+    newDish.value.images = files;
+
+    try {
+      // Simulate progress
+      const simulateProgress = () => {
+        uploadProgress.value = 0;
+        const interval = setInterval(() => {
+          if (uploadProgress.value < 90) {
+            uploadProgress.value += Math.floor(Math.random() * 10) + 1;
+          } else {
+            clearInterval(interval);
+          }
+        }, 500);
+        return interval;
+      };
+
+      const interval = simulateProgress();
+
+      const urls = await Promise.all(files.map(file => uploadImage(file)));
+
+      clearInterval(interval);
+      uploadProgress.value = 100;
+
+      setTimeout(() => {
+        uploadProgress.value = 0;
+      }, 500);
+
+      uploadedImageUrls.value = urls;
+      console.log('Images uploaded successfully:', urls);
+    } catch (error) {
+      console.error('Error uploading images:', error);
+    }
   }
-}
+};
 
 const submitDish = async () => {
   // Prepare the data to send to the backend
+  console.log("AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
+  console.log("Uploaded image urls: ", uploadedImageUrls.value[0]);
   const data = {
     DishName: newDish.value.name,
     DishDescription: newDish.value.description,
     Cost: newDish.value.price,
     DishType: newDish.value.dishType,
-    imageLinks: newDish.value.image ? [newDish.value.image] : [],
+    imageLinks: uploadedImageUrls.value,
   };
 
   // Send a POST request to your backend API
@@ -185,8 +249,6 @@ const submitDish = async () => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-
-
 
   // If the request was successful, refresh the dishes list
   if (response.ok) {
@@ -200,6 +262,23 @@ const submitDish = async () => {
   closeAddDishModal();
 };
 
+// const editDish = async () => {
+//   // Prepare the data to send to the backend
+//   const data = {
+//     id: selectedDish.value?.id,
+//     name: selectedDish.value?.name,
+//     description: selectedDish.value?.description,
+//     cost: selectedDish.value?.costs[0].cost,
+//     DishType: selectedDish.value?.DishType.id,
+//     available: selectedDish.value?.available,
+//     imageLinks: selectedDish.value?.images,
+//   };
+//   console.log(JSON.stringify(data));
+//   dishStore.updateDish(data);
+//   console.log("Yooooo", selectedDish.value?.DishType?.DishTypeName);
+//   closeDialog();
+// }
+
 const editDish = async () => {
   // Prepare the data to send to the backend
   const data = {
@@ -209,13 +288,13 @@ const editDish = async () => {
     cost: selectedDish.value?.costs[0].cost,
     DishType: selectedDish.value?.DishType.id,
     available: selectedDish.value?.available,
-    imageLinks: selectedDish.value?.images,
+    imageLinks: selectedDish.value?.images ? [...selectedDish.value.images, ...uploadedImageUrls.value] : uploadedImageUrls.value,
   };
   console.log(JSON.stringify(data));
   dishStore.updateDish(data);
   console.log("Yooooo", selectedDish.value?.DishType?.DishTypeName);
   closeDialog();
-}
+};
 
 watch(() => selectedDish.value?.available, (newVal) => {
   console.log("selectedDish.value.available changed to:", newVal);
@@ -266,7 +345,14 @@ watch([filterStatus, filterType], async () => {
   searchDish();
 });
 
-function deleteDish() { }
+async function handleDelete(dishID: string) {
+  try {
+    const response = await dishStore.deleteDish(dishID);
+    console.log(response);
+  } catch {
+    console.log("Error deleting dish");
+  }
+}
 
 
 </script>
@@ -344,7 +430,7 @@ function deleteDish() { }
                 <Edit class="w-4 h-4 mr-2" />
                 Chỉnh Sửa
               </Button>
-              <Button variant="destructive" size="sm" @click="handleDelete">
+              <Button variant="destructive" size="sm" @click="handleDelete(dish.id)">
                 <Trash2 class="w-4 h-4 mr-2" />
                 Xóa
               </Button>
@@ -474,10 +560,11 @@ function deleteDish() { }
             <Label for="image">Dish Image</Label>
             <!-- Add image link -->
             <div class="mb-4">
-              <img :src="selectedDish.images[0]" alt="Dish Image" class="w-full h-48 object-cover"
+              <img :src="selectedDish.images[0].Link" alt="Dish Image" class="w-full h-48 object-cover"
                 v-if="selectedDish.images.length > 0" />
             </div>
             <Input id="image" type="file" accept="image/*" @change="handleImageUpload" />
+            <Progress v-if="uploadProgress > 0" v-model="uploadProgress" class="w-full mt-2" />
           </div>
 
           <DialogFooter>

@@ -40,6 +40,8 @@ interface Invoice {
   promotionName: string;
   invoiceDetails: InvoiceDetail[];
   finalTotalCost: number;
+  pointEarned: number;
+  pointUsed: number;
 }
 
 const isDetailModalOpen = ref(false)
@@ -171,6 +173,8 @@ const formatDate = (dateString: string | Date): string => {
             <TableHead>Bàn</TableHead>
             <TableHead>Khuyến mãi</TableHead>
             <TableHead>Tỷ lệ</TableHead>
+            <TableHead class="">Điểm tích lũy</TableHead>
+            <TableHead class="">Điểm sử dụng</TableHead>
             <TableHead class="cursor-pointer w-1/11 flex items-center justify-end">Tổng Tiền Sau Cùng</TableHead>
             <TableHead></TableHead>
           </TableRow>
@@ -181,8 +185,10 @@ const formatDate = (dateString: string | Date): string => {
             <TableCell class="text-right">{{ formatCurrency(invoice.totalCost) }}</TableCell>
             <TableCell>{{ invoice.orderNote || 'N/A' }}</TableCell>
             <TableCell>{{ invoice.tableNumber }}</TableCell>
-            <TableCell>{{ invoice.promotionName || 'None' }}</TableCell>
-            <TableCell>{{ invoice.discount + "%" || 'None' }}</TableCell>
+            <TableCell>{{ invoice.promotionName || '0' }}</TableCell>
+            <TableCell>{{ invoice.discount + "%" || '0' }}</TableCell>
+            <TableCell>{{ invoice.pointEarned || '0' }}</TableCell>
+            <TableCell>{{ invoice.pointUsed || '0' }}</TableCell>
             <TableCell class="text-right">{{ formatCurrency((invoice.finalTotalCost)) || 'None' }}</TableCell>
             <TableCell class="text-right">
               <Button variant="ghost" size="icon" @click="openInvoiceDetail(invoice)">

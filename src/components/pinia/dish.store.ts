@@ -8,9 +8,17 @@ interface Dish {
     name: string;
     description: string;
     cost: number[];
-    imageUrl: string;
+    images: Image[];
     available: boolean;
     timeToCook: number;
+}
+
+interface Image{
+    id: string;
+    Link: string;
+    createAt: string;
+    updateAt: string;
+    dishId: string;
 }
 
 export const useDishStore = defineStore('dish', () => {

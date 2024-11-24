@@ -59,7 +59,7 @@ export const useDepartmentStore = defineStore('department', () => {
             console.error('Failed to add department')
         }
         } catch (error) {
-        console.error('Error adding department:', error)
+            console.error('Error adding department:', error)
         }
     }
 

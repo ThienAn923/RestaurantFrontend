@@ -18,6 +18,7 @@ import { Button } from './ui/button'
 const invoiceStore = useInvoiceStore();
 const { toast } = useToast()
 
+
 // Define types
 type Invoice = {
   id: number;

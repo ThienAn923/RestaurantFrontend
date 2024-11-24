@@ -11,6 +11,9 @@ interface InvoiceDetail {
   createAt: Date;
   salePerUnit: undefined | number;
   promotionAfterDishID?: string | null;
+  originalPrice: number;
+  promotionName?: string;
+  discount?: number;
 }
 
 interface Invoice {
@@ -25,9 +28,12 @@ interface Invoice {
   tableID: string;
   tableNumber: number;
   promotionID?: string | undefined;
-  promotionName: string; //this have a default value "No promotion"
-  invoiceTotalCost: number;
+  promotionName: string;
   invoiceDetails: InvoiceDetail[];
+  finalTotalCost: number;
+  pointEarned: number;
+  pointUsed: number;
+  discount: number;
 }
 
 
@@ -122,10 +128,10 @@ export const useInvoiceStore = defineStore('invoice', () => {
     }
   }
 
-  const createInvoice = async (data: any) => {
+  const createInvoice = async (selectedOrderID: string, selectedClient: string, pointUsed?: number) => {
     try {
-      // console.log("Im here" + data);
-      const response = await axiosInstance.post('/invoice', {OrderID: data}); //wrap data in JSON
+      //no worry bout pointused, it have been handled in the backend, if no point used, it will be 0
+      const response = await axiosInstance.post('/invoice', {OrderID: selectedOrderID, ClientID: selectedClient, pointUsed: pointUsed}); //wrap data in JSON
       return response.data;
     } catch (error) {
       console.error('Error creating invoice:', error)

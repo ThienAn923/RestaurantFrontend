@@ -189,7 +189,7 @@ watch([selectedDate], () => {
 <template>
   <div class="min-h-screen bg-gray-100 p-4 ">
     <div class="w-full mx-auto">
-      <h1 class="text-3xl md:text-4xl font-bold mb-6 text-gray-900">Xem Đơn Hàng Hiện Có</h1>
+      <h1 class="text-3xl md:text-4xl font-bold mb-6 text-gray-900">Xem Đơn Hiện Có</h1>
       <div class="mb-6 flex flex-wrap gap-2 ">
         <div class="flex gap-2">
           <Button v-for="status in ['Tất cả', 'Đơn mới', 'Đang nấu', 'Hoàn thành']" :key="status"

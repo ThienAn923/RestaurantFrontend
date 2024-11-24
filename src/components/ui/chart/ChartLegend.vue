@@ -4,7 +4,6 @@ import type { BulletLegendItemInterface } from '@unovis/ts'
 import { BulletLegend } from '@unovis/ts'
 import { nextTick, onMounted, ref } from 'vue'
 import { buttonVariants } from '@/components/ui/button'
-import { computed } from 'vue'
 import { formatCurrency } from '@/lib/formatMoney'
 
 const props = withDefaults(defineProps<{
