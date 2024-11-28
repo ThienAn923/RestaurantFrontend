@@ -12,12 +12,13 @@
     "@unovis/ts": "^1.4.4",
     "@unovis/vue": "^1.4.4",
     "@vuepic/vue-datepicker": "^9.0.3",
-    "@vueuse/core": "^11.2.0",
+    "@vueuse/core": "^11.3.0",
     "axios": "^1.7.7",
     "chart.js": "^4.4.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "embla-carousel-vue": "^8.5.1",
     "jwt-decode": "^4.0.0",
     "lucide-vue-next": "^0.441.0",
     "node-cron": "^3.0.3",
@@ -31,6 +32,7 @@
     "tailwindcss-animate": "^1.0.7",
     "v-calendar": "^3.1.2",
     "vue": "^3.4.37",
+    "vue-lazyload": "^3.0.0",
     "vue-router": "^4.0.13"
   },
   "devDependencies": {

@@ -94,6 +94,7 @@ export const useDishStore = defineStore('dish', () => {
     const updateDish = async (updatedDish: Omit<Dish, 'createAt' | 'updateAt' >) => {
         try {
             //Will combacl, not sure if it was able to update if i include the id
+            console.log(JSON.stringify(updatedDish));
             const response = await fetch(`http://localhost:3000/api/dish/${updatedDish.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },

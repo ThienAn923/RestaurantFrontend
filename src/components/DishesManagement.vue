@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, watchEffect } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -8,6 +8,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel'
 import { onMounted } from 'vue'
 import { useDishStore } from './pinia/dish.store'
 import { SearchIcon, Edit, Trash2, Plus } from 'lucide-vue-next'
@@ -16,6 +23,7 @@ import { formatCurrency } from '../lib/formatMoney'
 import { uploadImage } from './utils/cloudinary'
 import { Progress } from '@/components/ui/progress'
 import { useToast } from './ui/toast'
+import { X } from 'lucide-vue-next'
 
 
 const dishStore = useDishStore();
@@ -32,9 +40,9 @@ onMounted(async () => {
   dishes.value = dishesData.data.map((dish: any) => {
     // If the dish has images, use the link of the first image as the imageUrl
     // If the dish doesn't have images, use a default image link
-    const imageUrl = dish.images.length > 0 ? dish.images[0].Link : 'vite.svg';
+    // const imageUrl = dish.images.length > 0 ? dish.images[0].Link : 'vite.svg';
     // console.log("AHHHHHHHHHHHHHH", dish.images[0]?.Link);
-    dish.images[0] = imageUrl;
+    // dish.images[0] = imageUrl;
     // Return a new object that has all the original dish properties plus imageUrl
     return { ...dish };
   });
@@ -101,7 +109,7 @@ interface Image {
 const isAddDishModalOpen = ref(false)
 const isAddDishTypeModalOpen = ref(false)
 const isEditDishModalOpen = ref(false)
-const selectedDish = ref<Dish | undefined>(undefined);
+const selectedDish = ref<Dish | null>(null);
 const searchQuery = ref('');
 const filterStatus = ref('AllStatus');
 const statusOptions = [
@@ -288,12 +296,17 @@ const editDish = async () => {
     cost: selectedDish.value?.costs[0].cost,
     DishType: selectedDish.value?.DishType.id,
     available: selectedDish.value?.available,
-    imageLinks: selectedDish.value?.images ? [...selectedDish.value.images, ...uploadedImageUrls.value] : uploadedImageUrls.value,
+    imageLinks: selectedDish.value?.images ? [...selectedDish.value.images.map(image => image.Link), ...uploadedImageUrls.value] : uploadedImageUrls.value,
   };
   console.log(JSON.stringify(data));
   dishStore.updateDish(data);
+
+
+  selectedDish.value = await dishStore.fetchDishByID(selectedDish.value.id);
   console.log("Yooooo", selectedDish.value?.DishType?.DishTypeName);
   closeDialog();
+  await dishStore.fetchDish(1);
+  dishes.value = dishStore.dish; //ignore the error lol, mismatch stuff, lazy to fix
 };
 
 watch(() => selectedDish.value?.available, (newVal) => {
@@ -335,8 +348,8 @@ async function searchDish() {
   // console.log("Data is here: ", JSON.stringify(dishStore.dish));
   dishes.value = dishStore.dish.map((dish: any) => {
     //If no img, use default img
-    const imageUrl = dish.images.length > 0 ? dish.images[0].Link : 'vite.svg';
-    dish.images[0] = imageUrl;
+    // const imageUrl = dish.images.length > 0 ? dish.images[0].Link : 'vite.svg';
+    // dish.images[0] = imageUrl;
     return { ...dish };
   });
 }
@@ -353,6 +366,45 @@ async function handleDelete(dishID: string) {
     console.log("Error deleting dish");
   }
 }
+
+
+
+
+//This one is only for money format
+
+const formattedCost = ref('')
+watch(() => selectedDish?.value?.costs?.[0]?.cost, (newCost) => {
+  if (selectedDish?.value?.costs && selectedDish.value.costs.length > 0 && newCost !== undefined) {
+    console.log("Unformatted cost: ", newCost);
+    formattedCost.value = formatCurrency(newCost);
+  }
+}, { immediate: true });
+
+const handleInput = (event) => {
+  const input = event.target.value;
+  const numericValue = input.replace(/[^0-9]/g, '');
+  if (numericValue) {
+    selectedDish!.value!.costs[0].cost = parseInt(numericValue, 10);
+    formattedCost.value = formatCurrency(selectedDish!.value!.costs[0].cost);
+  } else {
+    event.target.value = formattedCost.value;
+  }
+};
+
+const handleChecked = () => {
+  selectedDish!.value!.available = !selectedDish!.value!.available;
+}
+
+const removeImage = (index: number) => {
+  if (selectedDish.value && selectedDish.value.images) {
+    console.log("All information", index, JSON.stringify(selectedDish.value.images));
+    selectedDish.value.images.splice(index, 1)
+  }
+}
+
+watch(selectedDish, (newVal) => {
+  console.log("image link", JSON.stringify(newVal?.images));
+})
 
 
 </script>
@@ -407,9 +459,18 @@ async function handleDelete(dishID: string) {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card v-for="dish in dishes" :key="dish.id"
           class="bg-white rounded-lg shadow-md overflow-hidden transition-shadow hover:shadow-lg">
-          <img :src="dish.images[0]" :alt="dish.name" class="w-full h-48 object-cover"
-            @click="openInfoDialog(dish.id)" />
-          <CardContent class="p-4" @click="openInfoDialog(dish.id)">
+          <Carousel>
+            <div class="relative">
+              <CarouselContent>
+                <CarouselItem v-for="(image, index) in dish.images" :key="index">
+                  <img loading="lazy" :src="image.Link" :alt="dish.name" class="w-full h-48 object-cover" />
+                </CarouselItem>
+              </CarouselContent>
+              <CarouselPrevious class="absolute left-0 top-1/2 transform -translate-y-1/2 divide-indigo-100" />
+              <CarouselNext class="absolute right-0 top-1/2 transform -translate-y-1/2" />
+            </div>
+          </Carousel>
+          <CardContent class=" p-4" @click="openInfoDialog(dish.id)">
             <h2 class="text-xl font-semibold mb-2">{{ dish.name }}</h2>
             <p class="text-gray-600 mb-2">{{ dish.description }}</p>
             <div class="flex justify-between items-center mb-4">
@@ -450,24 +511,24 @@ async function handleDelete(dishID: string) {
             Enter the details of the new dish below. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <form @submit.prevent="submitDish" class="space-y-4">
+        <form class="space-y-4">
           <div>
-            <Label for="name">Dish Name</Label>
+            <Label for="name">Tên Món</Label>
             <Input id="name" v-model="newDish.name" required />
           </div>
 
           <div>
-            <Label for="description">Description</Label>
+            <Label for="description">Mô Tả</Label>
             <Textarea id="description" v-model="newDish.description" required />
           </div>
 
           <div>
-            <Label for="price">Price</Label>
+            <Label for="price">Giá</Label>
             <Input id="price" v-model="newDish.price" type="number" step="0.01" required />
           </div>
 
           <div>
-            <Label for="dishType">Dish Type</Label>
+            <Label for="dishType">Loại Món</Label>
             <Select v-model="newDish.dishType">
               <SelectTrigger>
                 <SelectValue placeholder="Select a dish type" />
@@ -482,17 +543,17 @@ async function handleDelete(dishID: string) {
 
           <div class="flex items-center space-x-2">
             <Switch id="available" v-model="newDish.available" />
-            <Label for="available">Available</Label>
+            <Label for="available">Trạng Thái</Label>
           </div>
 
           <div>
-            <Label for="image">Dish Image</Label>
+            <Label for="image">Hình Ảnh</Label>
             <Input id="image" type="file" accept="image/*" @change="handleImageUpload" />
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" @click="closeAddDishModal">Cancel</Button>
-            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Save Dish</Button>
+            <Button type="button" variant="outline" @click="closeAddDishModal">Thoát</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Lưu Món Ăn</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -514,62 +575,78 @@ async function handleDelete(dishID: string) {
 
     <!-- Edit Dish Modal -->
     <Dialog v-model:open="isEditDishModalOpen">
-      <DialogContent class="sm:max-w-[425px]">
+      <DialogContent class="sm:max-w-[900px]">
         <DialogHeader>
           <DialogTitle>Sửa thông tin món ăn</DialogTitle>
           <DialogDescription>
             Nhập thông tin cho món ăn dưới đây.
           </DialogDescription>
         </DialogHeader>
-        <form @submit.prevent="editDish" class="space-y-4">
-          <div v-if="selectedDish">
-            <Label for="name">Dish Name</Label>
-            <Input id="name" v-model="selectedDish.name" required />
-          </div>
-
-          <div v-if="selectedDish">
-            <Label for="description">Description</Label>
-            <Textarea id="description" v-model="selectedDish.description" required />
-          </div>
-
-          <div v-if="selectedDish">
-            <Label for="price">Price</Label>
-            <Input id="price" v-model="selectedDish.costs[0].cost" type="number" step="0.01" required />
-          </div>
-
-          <div v-if="selectedDish">
-            <Label for="dishType">Dish Type</Label>
-            <Select v-model="selectedDish.DishType.id">
-              <SelectTrigger>
-                <SelectValue :value="selectedDish.DishType.DishTypeName || 'Select a dish type'" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="type in dishTypes" :key="type.id" :value="type.id">
-                  {{ type.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="flex items-center space-x-2" v-if="selectedDish">
-            <Switch id="available" @update:checked="updateState" :checked="selectedDish.available" />
-            <Label for="available">Available</Label>
-          </div>
-
-          <div v-if="selectedDish">
-            <Label for="image">Dish Image</Label>
-            <!-- Add image link -->
-            <div class="mb-4">
-              <img :src="selectedDish.images[0].Link" alt="Dish Image" class="w-full h-48 object-cover"
-                v-if="selectedDish.images.length > 0" />
+        <form class="space-y-4" v-if="selectedDish">
+          <div class="grid grid-cols-2 gap-4">
+            <div v-if="selectedDish">
+              <Label for="name">Tên Món</Label>
+              <Input id="name" v-model="selectedDish.name" required />
             </div>
-            <Input id="image" type="file" accept="image/*" @change="handleImageUpload" />
-            <Progress v-if="uploadProgress > 0" v-model="uploadProgress" class="w-full mt-2" />
+
+            <div v-if="selectedDish">
+              <Label for="price">Giá</Label>
+              <Input id="price" v-model="formattedCost" @input="handleInput" type="string" step="0.01" required />
+            </div>
+
+            <div v-if="selectedDish">
+              <Label for="dishType">Loại Món</Label>
+              <Select v-model="selectedDish.DishType.id">
+                <SelectTrigger>
+                  <SelectValue :value="selectedDish.DishType.DishTypeName || 'Select a dish type'" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="type in dishTypes" :key="type.id" :value="type.id">
+                    {{ type.name }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div class="space-y-2">
+              <Label>Trạng Thái Phục Vụ</Label>
+              <div class="flex items-center space-x-2">
+                <Switch id="editStatus" :checked="selectedDish.available" @update:checked="handleChecked" />
+                <Label for="editStatus">{{ selectedDish.available ? 'Còn Phục Vụ' :
+                  'Hết Phục Vụ' }}</Label>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="selectedDish">
+            <Label for="description">Mô Tả</Label>
+            <Textarea id="description" v-model="selectedDish.description" required rows="3" />
+          </div>
+
+          <div class="space-y-2">
+            <Label for="image">Hình Ảnh</Label>
+            <Carousel class="w-full h-full mx-auto">
+              <CarouselContent>
+                <CarouselItem v-for="(image, index) in selectedDish.images" :key="index"
+                  class="md:basis-1/2 lg:basis-1/3 relative group">
+                  <img loading="lazy" :src="image.Link" :alt="selectedDish.name"
+                    class="w-full h-32 object-cover rounded-md" />
+                  <Button type="button" @click.stop="removeImage(index)"
+                    class="absolute top-1 right-1 h-6 w-6 p-0 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X class="h-4 w-4 text-white" />
+                  </Button>
+                </CarouselItem>
+              </CarouselContent>
+            </Carousel>
+            <div class="flex items-center space-x-2">
+              <Input id="image" type="file" accept="image/*" @change="handleImageUpload" class="flex-grow" />
+              <Progress v-if="uploadProgress > 0" v-model="uploadProgress" class="w-24" />
+            </div>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" @click="closeDialog">Cancel</Button>
-            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Save Dish</Button>
+            <Button type="button" @click="editDish" class="bg-blue-500 hover:bg-blue-600 text-white">Save Dish</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -594,7 +671,7 @@ async function handleDelete(dishID: string) {
 
           <div v-if="selectedDish">
             <Label for="price">Price</Label>
-            <Input id="price" v-model="selectedDish.costs[0].cost" type="number" step="0.01" readonly />
+            <Input id="price" v-model="formattedCost" type="string" step="0.01" readonly />
           </div>
 
           <div v-if="selectedDish">
@@ -613,10 +690,30 @@ async function handleDelete(dishID: string) {
 
           <div class="flex items-center space-x-2" v-if="selectedDish">
             <Switch id="available" @update:checked="updateState" :checked="selectedDish.available" disabled />
-            <Label for="available">Available</Label>
+            <Label for="available">Còn Phục Vụ</Label>
           </div>
         </form>
       </DialogContent>
     </Dialog>
   </div>
 </template>
+<!-- <style>
+.carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+
+.carousel img {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+.carousel .absolute {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+}
+</style> -->
