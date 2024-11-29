@@ -66,6 +66,7 @@ export const useDepartmentStore = defineStore('department', () => {
     const updateDepartment = async (updatedDepartment: Omit<Department, 'isDeleted' | 'updateAt' | 'createAt'>) => {
         try {
         const { id, ...updatedDepartmentWithoutId } = updatedDepartment
+        console.log(updatedDepartmentWithoutId);
         const response = await fetch(`http://localhost:3000/api/department/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },

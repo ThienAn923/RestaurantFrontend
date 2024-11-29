@@ -7,9 +7,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useDepartmentStore } from './pinia/department.store'
+import { useEmployeeStore } from './pinia/employee.store'
 
 const departmentStore = useDepartmentStore()
+const employeeStore = useEmployeeStore()
 
 const isAddModalOpen = ref(false)
 const isEditModalOpen = ref(false)
@@ -19,7 +22,7 @@ const currentDepartment = ref({
   departmentName: '',
   departmentDescription: null as string | null,
   totalEmployee: 0,
-  headOfDepartment: null as string | null,
+  headOfDepartment: undefined as string | undefined,
   createAt: new Date(),
   updateAt: new Date(),
 })
@@ -35,10 +38,11 @@ const sortOrder = ref<'asc' | 'desc'>('asc')
 
 onMounted(() => {
   departmentStore.fetchDepartments(1)
+  employeeStore.fetchEmployees(1, 900000) //featch all employee instead of making a proper search component because i am so so so fucking tired. 
 })
 
 const addDepartment = async () => {
-  await departmentStore.addDepartment(newDepartment.value)
+  await departmentStore.addDepartment(newDepartment.value,)
   isAddModalOpen.value = false
   newDepartment.value = {
     departmentName: '',
@@ -234,7 +238,7 @@ watch([searchQuery], () => {
     </div>
 
     <!-- Add Department Modal -->
-    <Dialog v-model:open="isAddModalOpen">
+    <!-- <Dialog v-model:open="isAddModalOpen">
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Department</DialogTitle>
@@ -260,10 +264,10 @@ watch([searchQuery], () => {
           </DialogFooter>
         </form>
       </DialogContent>
-    </Dialog>
+    </Dialog> -->
 
     <!-- Lmao so the thing is we dont have employee yet soooo, let just put it here and make it work later -->
-    <Dialog v-model:open="isAddModalOpen222222222222222">
+    <Dialog v-model:open="isAddModalOpen">
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Department</DialogTitle>
@@ -288,7 +292,7 @@ watch([searchQuery], () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem v-for="employee in employeeStore.employees" :key="employee.id" :value="employee.id">
-                  {{ employee.Person.firstName }} {{ employee.Person.lastName }}
+                  {{ employee.person.name }}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -319,8 +323,17 @@ watch([searchQuery], () => {
             <Textarea id="edit-description" v-model="currentDepartment.departmentDescription" />
           </div>
           <div class="space-y-2">
-            <Label for="edit-headOfDepartment">Head of Department</Label>
-            <Input id="edit-headOfDepartment" v-model="currentDepartment.headOfDepartment" />
+            <Label for="edit-headOfDepartment">Trưởng Bộ Phận</Label>
+            <Select v-model="currentDepartment.headOfDepartment.id">
+              <SelectTrigger>
+                <SelectValue :placeholder="currentDepartment.headOfDepartment.name" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="employee in employeeStore.employees" :key="employee.id" :value="employee.id">
+                  {{ employee.person.name }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button type="submit">Save Changes</Button>

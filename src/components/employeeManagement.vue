@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { PlusIcon, PencilIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -95,6 +95,15 @@ const pageNumbers = computed(() => {
 const goToPage = (page: number) => {
   employeeStore.fetchEmployees(page)
 }
+
+
+watch(newEmployee, (newVal) => {
+  console.log(JSON.stringify(newVal.AccountAuthority))
+})
+
+const handleChange = () => {
+  newEmployee.value.createAccount = !newEmployee.value.createAccount
+}
 </script>
 
 <template>
@@ -124,16 +133,18 @@ const goToPage = (page: number) => {
         <TableBody>
           <TableRow v-for="employee in employeeStore.employees" :key="employee.id">
             <TableCell class="font-medium">{{ employee.person.name }}</TableCell>
-            <TableCell class="w-2/6">{{ employee.employeeAdress }}</TableCell>
+            <TableCell class="w-4/12">{{ employee.employeeAdress }}</TableCell>
             <TableCell>{{ employee.employeeGender ? 'Nam' : 'Nữ' }}</TableCell>
             <TableCell>{{ formatDate(employee.employeeDateOfBirth) }}</TableCell>
-            <TableCell>{{ employee.department }}</TableCell>
             <TableCell>{{ employee.position }}</TableCell>
+            <TableCell>{{ employee.department }}</TableCell>
             <TableCell class="text-right">
-              <Button variant="ghost" size="icon" @click="openEditModal(employee)">
+              <Button variant="ghost" size="icon" @click="openEditModal(employee)"
+                class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" @click="deleteEmployee(employee.id)">
+              <Button variant="ghost" size="icon" @click="deleteEmployee(employee.id)"
+                class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
             </TableCell>
@@ -180,7 +191,7 @@ const goToPage = (page: number) => {
         <form @submit.prevent="addEmployee" class="space-y-4">
           <div class="space-y-2">
             <Label for="name">Name</Label>
-            <Input id="name" v-model="newEmployee.name" required />
+            <Input id="name" v-model="newEmployee.name" type="string" required />
           </div>
           <div class="space-y-2">
             <Label for="address">Address</Label>
@@ -229,8 +240,22 @@ const goToPage = (page: number) => {
             </Select>
           </div>
           <div class="flex items-center space-x-2">
-            <Checkbox id="create-account" v-model="newEmployee.createAccount" />
-            <Label for="create-account">Create account for this employee</Label>
+            <Checkbox id="create-account" v-model="newEmployee.createAccount" @update:checked="handleChange" />
+            <Label for="create-account">Tạo tài khoản cho nhân viên này?</Label>
+          </div>
+          <div v-if="newEmployee.createAccount" class="space-y-2">
+            <Label for="account-authority">Loại Tài Khoản</Label>
+            <Select v-model="newEmployee.AccountAuthority" required>
+              <SelectTrigger>
+                <SelectValue placeholder="Chọn loại tài khoản" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1" key="1">Tài Khoản Quản Lý</SelectItem>
+                <SelectItem value="2" key="2">Tài Khoản Đầu Bếp</SelectItem>
+                <SelectItem value="3" key="3">Tài Khoản Tiếp Tân</SelectItem>
+                <SelectItem value="4" key="4">Tài Khoản Phục Vụ</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button type="submit">Add Employee</Button>
@@ -243,22 +268,22 @@ const goToPage = (page: number) => {
     <Dialog v-model:open="isEditEmployeeModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Employee</DialogTitle>
+          <DialogTitle>Chỉnh Sửa Thông Tin Nhân Viên</DialogTitle>
           <DialogDescription>
-            Make changes to the employee information.
+            Chỉnh sửa thông tin cho nhân viên bằng cách nhập các trường dưới đây
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="editEmployee" class="space-y-4">
           <div class="space-y-2">
-            <Label for="edit-name">Name</Label>
-            <Input id="edit-name" v-model="currentEmployee.name" required />
+            <Label for="edit-name">Tên Nhân Viên</Label>
+            <Input id="edit-name" v-model="currentEmployee.person.name" required />
           </div>
           <div class="space-y-2">
-            <Label for="edit-address">Address</Label>
+            <Label for="edit-address">Địa Chỉ Nhân Viên</Label>
             <Input id="edit-address" v-model="currentEmployee.employeeAdress" required />
           </div>
           <div class="space-y-2">
-            <Label for="edit-gender">Gender</Label>
+            <Label for="edit-gender">Giới Tính Nhân Viên</Label>
             <Select v-model="currentEmployee.employeeGender" required>
               <SelectTrigger>
                 <SelectValue placeholder="Select gender" />
@@ -270,12 +295,14 @@ const goToPage = (page: number) => {
             </Select>
           </div>
           <div class="space-y-2">
-            <Label for="edit-dob">Date of Birth</Label>
-            <Input id="edit-dob" type="date" v-model="currentEmployee.employeeDateOfBirth" required />
+            <Label for="edit-dob">Ngày Sinh</Label>
+            <Input id="edit-dob" type="date"
+              :value="new Date(currentEmployee.employeeDateOfBirth).toISOString().substr(0, 10)"
+              @input="currentEmployee.employeeDateOfBirth = $event.target.value" required />
           </div>
           <div class="space-y-2">
-            <Label for="edit-department">Department</Label>
-            <Select v-model="currentEmployee.departmentId" required>
+            <Label for="edit-department">Bộ Phận</Label>
+            <Select v-model="currentEmployee.departmentName" required>
               <SelectTrigger>
                 <SelectValue placeholder="Select a department" />
               </SelectTrigger>
@@ -287,8 +314,8 @@ const goToPage = (page: number) => {
             </Select>
           </div>
           <div class="space-y-2">
-            <Label for="edit-position">Position</Label>
-            <Select v-model="currentEmployee.positionId" required>
+            <Label for="edit-position">Chức Vụ</Label>
+            <Select v-model="currentEmployee.work" required>
               <SelectTrigger>
                 <SelectValue placeholder="Select a position" />
               </SelectTrigger>
@@ -299,8 +326,23 @@ const goToPage = (page: number) => {
               </SelectContent>
             </Select>
           </div>
+
+          <div v-if="currentEmployee.person.account" class="space-y-2">
+            <Label for="account-authority">Loại Tài Khoản</Label>
+            <Select v-model="currentEmployee.person.account.AccountAuthority" required>
+              <SelectTrigger>
+                <SelectValue :placeholder="currentEmployee.person.account.AccountAuthority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1" key="1">Tài Khoản Quản Lý</SelectItem>
+                <SelectItem value="2" key="2">Tài Khoản Đầu Bếp</SelectItem>
+                <SelectItem value="3" key="3">Tài Khoản Tiếp Tân</SelectItem>
+                <SelectItem value="4" key="4">Tài Khoản Phục Vụ</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <DialogFooter>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit">Lưu Nhân Viên</Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -645,8 +645,8 @@ watch(selectedDish, (newVal) => {
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" @click="closeDialog">Cancel</Button>
-            <Button type="button" @click="editDish" class="bg-blue-500 hover:bg-blue-600 text-white">Save Dish</Button>
+            <Button type="button" variant="outline" @click="closeDialog">Hủy</Button>
+            <Button type="button" @click="editDish" class="bg-blue-500 hover:bg-blue-600 text-white">Lưu Món Ăn</Button>
           </DialogFooter>
         </form>
       </DialogContent>

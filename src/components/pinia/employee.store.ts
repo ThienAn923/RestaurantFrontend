@@ -43,9 +43,9 @@ export const useEmployeeStore = defineStore('employee', () => {
 
   const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage))
 
-  const fetchEmployees = async (page: number) => {
+  const fetchEmployees = async (page: number, limit?: number) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/employee?page=${page}&limit=${itemsPerPage}`)
+      const response = await fetch(`http://localhost:3000/api/employee?page=${page}&limit=${limit ?? itemsPerPage}`)
       const data = await response.json()
       employees.value = data.employees
       totalItems.value = data.total

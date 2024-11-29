@@ -85,9 +85,11 @@ const allSidebarItems = ref<MenuItem[]>([
         ]
       },
       { title: 'Quản Lý Chi Tiêu', href: '/expense', requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST] },
+      { title: 'Quản Lý Khách Hàng', href: '/client', requiredRole: [ROLES.ADMIN] },
     ]
   },
   { title: 'Cài Đặt', icon: Settings, href: '/settings', requiredRole: [ROLES.ADMIN, ROLES.CHEF, ROLES.RECEPTIONIST, ROLES.SERVER] },
+
 ])
 
 function mapRoleToPermission(role: number): string {

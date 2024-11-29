@@ -61,6 +61,18 @@ export const useClientStore = defineStore('client', () => {
     }
   };
 
+  const fetchClientById = async (id: string) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/client/${id}`);
+      if (response.ok) {
+        return await response.json();
+      } else {
+        console.error('Failed to fetch client');
+      }
+    } catch (error) {
+      console.error('Error fetching client:', error);
+    }
+  }
   const updateClient = async (updatedClient: Client) => {
     try {
       const { id, ...clientData } = updatedClient;
@@ -94,9 +106,39 @@ export const useClientStore = defineStore('client', () => {
     }
   };
 
+  const banAccount = async (id: string, reason: string) => {
+    try {
+      const response = await axiosInstance.put(`/client/${id}/ban`, { reason });
+      if (response.status === 200) {
+        await fetchClients(currentPage.value, 5);
+      } else {
+        console.error('Failed to ban client');
+      }
+    } catch (error) {
+      console.error('Error banning client:', error);
+    }
+  }
+
+  const unbanAccount = async (id: string) => { 
+    try {
+      const response = await axiosInstance.put(`/client/${id}/unban`);
+      if (response.status === 200) {
+        await fetchClients(currentPage.value, 5);
+      } else {
+        console.error('Failed to unban client');
+      }
+    } catch (error) {
+      console.error('Error unbanning client:', error);
+    }
+  }
+
 
   const setSearch = (searchValue: string) => {
     search.value = searchValue;
+  }
+  const setSorting = (column: string, order: string) => {
+    sortColumn.value = column;
+    sortOrder.value = order;
   }
 
   return {
@@ -109,5 +151,9 @@ export const useClientStore = defineStore('client', () => {
     updateClient,
     deleteClient,
     setSearch,
+    setSorting,
+    banAccount,
+    fetchClientById,
+    unbanAccount,
   };
 });

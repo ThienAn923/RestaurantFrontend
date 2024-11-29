@@ -24,6 +24,8 @@ const routes = [
   { path: '/orderCompleted', component: () => import('./components/orderReceptionistPage.vue'), meta: { requiresAuth: true, requiredRoles: [ROLES.ADMIN, ROLES.RECEPTIONIST] }},
   { path: '/DishesOrder', component: () => import('./components/DishesManagementOrderPage.vue'), meta: { requiresAuth: true, requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST, ROLES.SERVER]  } },
   { path: '/chat', component: () => import('./components/chatManagement.vue'), meta: { requiresAuth: true, requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST, ROLES.SERVER] } },
+  { path: '/client', component: () => import('./components/clientManagementPage.vue'), meta: { requiresAuth: true, requiredRole: [ROLES.ADMIN] } },
+  { path : '/printInvoice', component: () => import('./components/printInvoice.vue'), meta: { requiresAuth: true, requiredRole: [ROLES.ADMIN, ROLES.RECEPTIONIST, ROLES.SERVER] } },
 ]
 
 const {toast} = useToast()
