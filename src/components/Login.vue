@@ -16,7 +16,21 @@ const errorMessage = ref('')
 const login = async () => {
   try {
     await authStore.login(username.value, password.value)
-    router.push('/dashboard')
+    const userRole = authStore.userRole
+    console.log('User role:', userRole);
+
+    // Navigate based on user role
+    if (userRole === 1) { //admin
+      router.push('/Dashboard')
+    } else if (userRole === 2) { //chef
+      router.push('/order')
+    } else if (userRole === 3) { //recep
+      router.push('/Dashboard')
+    } else if (userRole === 4) { //server
+      router.push('/DishesOrder')
+    } else {
+      router.push('/login')
+    }
   } catch (error) {
     console.error('Login failed:', error)
     errorMessage.value = 'Login failed. Please check your credentials and try again.'
@@ -28,19 +42,19 @@ const login = async () => {
   <Card class="my-auto">
     <CardHeader>
       <CardTitle class="text-2xl">
-        Login
+        Đăng Nhập
       </CardTitle>
       <CardDescription>
-        Enter your username and password below to login to your account.
+        Nhập Tài Khoản và Mật Khẩu dưới đây để đăng nhập vào tài khoản của bạn.
       </CardDescription>
     </CardHeader>
     <CardContent class="grid gap-4">
       <div class="grid gap-2">
-        <Label for="username">Username</Label>
+        <Label for="username">Tên Đăng Nhập</Label>
         <Input id="username" type="text" v-model="username" placeholder="Enter your username" required />
       </div>
       <div class="grid gap-2">
-        <Label for="password">Password</Label>
+        <Label for="password">Mật Khẩu</Label>
         <Input id="password" type="password" v-model="password" required />
       </div>
       <p v-if="errorMessage" class="text-red-500">{{ errorMessage }}</p>

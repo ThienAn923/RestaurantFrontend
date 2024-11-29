@@ -8,10 +8,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useClientStore } from './pinia/client.store'
+import { useToast } from 'vue-toastification'
 
 
 
 
+const { toast } = useToast()
 const clientStore = useClientStore();
 interface Account {
     id: string;
@@ -72,6 +74,10 @@ const banAccount = async (id: string) => {
     console.log(id);
     await clientStore.banAccount(id, reason.value)
     isDialogOpen.value = false;
+    toast({
+        title: 'Thành công',
+        description: 'Đã ban tài khoản',
+    });
 }
 
 const unban = async (id: string) => {

@@ -20,6 +20,7 @@ import { useOrderStore } from './pinia/order.store'
 import { formatCurrency } from '@/lib/formatMoney.js'
 import { useToast } from "@/components/ui/toast";
 import TestComponent from './testComponent.vue';
+import { hasPermission, ROLES } from './utils/permission'
 
 
 
@@ -29,7 +30,6 @@ const dishStore = useDishStore();
 const authStore = useAuthStore();
 const { toast } = useToast()
 const selectedDate = ref<string>(new Date().toISOString()) //Nope, this aint nullable, my order gonna break if it's null
-const testComponentRef = ref<any>(TestComponent);
 
 
 const dishes = ref<Dish[]>([]);
@@ -121,6 +121,20 @@ interface Dish {
   promotionID: string | null;
   costs: Cost[];
   images: string[];
+}
+
+//unused, place it here for later
+function checkPermission() {
+  const requiredRoles = [ROLES.ADMIN]; // Define the roles required to add a dish type
+  console.log(authStore.userRole, requiredRoles);
+  if (!hasPermission(authStore.userRole, requiredRoles)) {
+    toast({
+      title: 'Forbidden',
+      description: 'You do not have permission to add, edit, or delete an',
+    });
+    return false;
+  }
+  return true;
 }
 
 const selectedDish = ref<Dish | undefined>(undefined);

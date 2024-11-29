@@ -232,9 +232,15 @@ const handleImageUpload = async (event: Event) => {
       }, 500);
 
       uploadedImageUrls.value = urls;
-      console.log('Images uploaded successfully:', urls);
+      toast({
+        title: 'Đã tải xong',
+        description: 'Hình ảnh tải lên thành công',
+      });
     } catch (error) {
-      console.error('Error uploading images:', error);
+      toast({
+        title: 'Tải Thất bại',
+        description: 'Không thể tải ảnh lên',
+      });
     }
   }
 };
@@ -260,12 +266,21 @@ const submitDish = async () => {
 
   // If the request was successful, refresh the dishes list
   if (response.ok) {
-    const dish = await response.json();
-    dishes.value.push(dish);
+    // const dish = await response.json();
+    // dishes.value.push(dish);
+    await dishStore.fetchDish(1);
+    dishes.value = dishStore.dish;
+    toast({
+      title: 'Thêm món ăn thành công',
+      description: 'Món ăn đã được thêm vào danh sách',
+    });
     closeAddDishModal();
   } else {
     // Handle error
-    console.error('Failed to add dish');
+    toast({
+      title: 'Thêm món ăn thất bại',
+      description: 'Không thể thêm món ăn',
+    });
   }
   closeAddDishModal();
 };
@@ -360,10 +375,22 @@ watch([filterStatus, filterType], async () => {
 
 async function handleDelete(dishID: string) {
   try {
+    console.log("DishID: ", dishID);
     const response = await dishStore.deleteDish(dishID);
     console.log(response);
+    if (response.status === 204) {
+      toast({
+        title: 'Xóa thành công',
+        description: 'Món ăn đã được xóa',
+      });
+      await dishStore.fetchDish(1);
+      dishes.value = dishStore.dish;
+    }
   } catch {
-    console.log("Error deleting dish");
+    toast({
+      title: 'Xóa thất bại',
+      description: 'Không thể xóa món ăn',
+    });
   }
 }
 
@@ -511,7 +538,7 @@ watch(selectedDish, (newVal) => {
             Enter the details of the new dish below. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <form class="space-y-4">
+        <form @submit.prevent="submitDish" class="space-y-4">
           <div>
             <Label for="name">Tên Món</Label>
             <Input id="name" v-model="newDish.name" required />

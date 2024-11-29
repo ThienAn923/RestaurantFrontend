@@ -117,6 +117,7 @@ export const useDishStore = defineStore('dish', () => {
             })
             if (response.ok) {
                 await fetchDish(currentPage.value)
+                return response;
             } else {
                 console.error('Failed to delete dish')
             }

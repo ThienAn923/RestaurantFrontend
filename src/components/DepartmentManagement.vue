@@ -10,7 +10,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useDepartmentStore } from './pinia/department.store'
 import { useEmployeeStore } from './pinia/employee.store'
+import { useToast } from './ui/toast'
 
+const { toast } = useToast()
 const departmentStore = useDepartmentStore()
 const employeeStore = useEmployeeStore()
 
@@ -42,13 +44,24 @@ onMounted(() => {
 })
 
 const addDepartment = async () => {
-  await departmentStore.addDepartment(newDepartment.value,)
-  isAddModalOpen.value = false
-  newDepartment.value = {
-    departmentName: '',
-    departmentDescription: null as string | null,
-    totalEmployee: 0,
-    headOfDepartment: null as string | null,
+  try {
+    await departmentStore.addDepartment(newDepartment.value,)
+    isAddModalOpen.value = false
+    newDepartment.value = {
+      departmentName: '',
+      departmentDescription: null as string | null,
+      totalEmployee: 0,
+      headOfDepartment: null as string | null,
+    }
+    toast({
+      title: 'Thành Công',
+      description: 'Thêm bộ phận thành công',
+    });
+  } catch (error) {
+    toast({
+      title: 'Lỗi',
+      description: 'Thêm bộ phận không thành công',
+    });
   }
 }
 
@@ -67,67 +80,81 @@ const openInfoModal = (department: typeof currentDepartment.value) => {
 }
 
 const editDepartment = async () => {
-  await departmentStore.updateDepartment(currentDepartment.value)
-  isEditModalOpen.value = false
+  try {
+    await departmentStore.updateDepartment(currentDepartment.value)
+    isEditModalOpen.value = false
+  } catch {
+    toast({
+      title: 'Lỗi',
+      description: 'Sửa bộ phận không thành công',
+    });
+  }
 }
 
 const deleteDepartment = async (id: string) => {
-  await departmentStore.deleteDepartment(id)
-}
+  try {
+    await departmentStore.deleteDepartment(id)
+  } catch (error) {
+    toast({
+      title: 'Lỗi',
+      description: 'Xóa bộ phận không thành công',
+    });
 
-const pageNumbers = computed(() => {
-  const totalPages = departmentStore.totalPages
-  const currentPage = departmentStore.currentPage
-  const pages = []
+  }
 
-  if (totalPages <= 4) {
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(i)
-    }
-  } else {
-    if (currentPage <= 3) {
-      pages.push(1, 2, 3, 4, '...', totalPages)
-    } else if (currentPage >= totalPages - 2) {
-      pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages)
+  const pageNumbers = computed(() => {
+    const totalPages = departmentStore.totalPages
+    const currentPage = departmentStore.currentPage
+    const pages = []
+
+    if (totalPages <= 4) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
     } else {
-      pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages)
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, 4, '...', totalPages)
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages)
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages)
+      }
     }
+
+    return pages
+  })
+
+  const goToPage = (page: number) => {
+    departmentStore.fetchDepartments(page)
   }
 
-  return pages
-})
-
-const goToPage = (page: number) => {
-  departmentStore.fetchDepartments(page)
-}
-
-const sortTable = (column: string) => {
-  if (sortColumn.value === column) {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortColumn.value = column
-    sortOrder.value = 'asc'
+  const sortTable = (column: string) => {
+    if (sortColumn.value === column) {
+      sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+    } else {
+      sortColumn.value = column
+      sortOrder.value = 'asc'
+    }
+    departmentStore.setSorting(sortColumn.value, sortOrder.value)
+    departmentStore.fetchDepartments(1)
   }
-  departmentStore.setSorting(sortColumn.value, sortOrder.value)
-  departmentStore.fetchDepartments(1)
-}
 
-const getSortIcon = (column: string) => {
-  if (sortColumn.value !== column) return null
-  return sortOrder.value === 'asc' ? ChevronUpIcon : ChevronDownIcon
-}
+  const getSortIcon = (column: string) => {
+    if (sortColumn.value !== column) return null
+    return sortOrder.value === 'asc' ? ChevronUpIcon : ChevronDownIcon
+  }
 
-const searchQuery = ref('')
+  const searchQuery = ref('')
 
-const resetFilters = () => {
-  searchQuery.value = ''
-}
+  const resetFilters = () => {
+    searchQuery.value = ''
+  }
 
-watch([searchQuery], () => {
-  // alert(searchQuery.value)
-  departmentStore.setSearch(searchQuery.value);
-  departmentStore.fetchDepartments(1)
-})
+  watch([searchQuery], () => {
+    // alert(searchQuery.value)
+    departmentStore.setSearch(searchQuery.value);
+    departmentStore.fetchDepartments(1)
+  })
 
 
 </script>

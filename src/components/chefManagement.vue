@@ -18,6 +18,12 @@ const isDialogOpen = ref(false);
 const selectedOrder = ref<Order | null>(null);
 const selectedDate = ref<string>(new Date().toISOString());
 const testComponentRef = ref(TestComponent);
+import { useAuthStore } from './pinia/auth'
+import { hasPermission, ROLES } from './utils/permission'
+import { useToast } from "./ui/toast"
+
+const { toast } = useToast();
+const authStore = useAuthStore()
 
 interface Order {
   id: string;
@@ -55,6 +61,19 @@ interface Order {
       name: string;
     };
   };
+}
+
+function checkPermission() {
+  const requiredRoles = [ROLES.ADMIN, ROLES.CHEFT]; // Define the roles required to add a dish type
+  console.log(authStore.userRole, requiredRoles);
+  if (!hasPermission(authStore.userRole, requiredRoles)) {
+    toast({
+      title: 'Forbidden',
+      description: 'You do not have permission to add, edit, or delete an',
+    });
+    return false;
+  }
+  return true;
 }
 
 onMounted(() => {
@@ -129,6 +148,7 @@ const filteredOrders = computed(() => {
 });
 
 const updateOrderStatus = async (id: string, newStatus: string) => {
+  if (!checkPermission()) return;
   const order = orderStore.orders.find(order => order.id === id);
   if (order) {
     await orderStore.updateOrder({ ...order, orderStatus: newStatus });
@@ -158,7 +178,10 @@ const openDialog = async (order) => {
     isDialogOpen.value = true;
   }
   catch (err) {
-    console.log(err);
+    toast({
+      title: 'Lỗi',
+      description: 'Không thể mở dialog',
+    });
   }
 };
 

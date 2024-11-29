@@ -10,6 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { usePromotionStore } from './pinia/promotion.store'
 import { ScrollArea } from '@/components/ui/scroll-area'
+
+import { useAuthStore } from './pinia/auth'
+import { hasPermission, ROLES } from './utils/permission'
+import { useToast } from "./ui/toast"
+
+const { toast } = useToast();
+const authStore = useAuthStore()
 const promotionStore = usePromotionStore()
 
 const isAddPromotionModalOpen = ref(false)
@@ -26,7 +33,21 @@ onMounted(async () => {
   await promotionStore.fetchDishes()
 })
 
+function checkPermission() {
+  const requiredRoles = [ROLES.ADMIN]; // Define the roles required to add a dish type
+  console.log(authStore.userRole, requiredRoles);
+  if (!hasPermission(authStore.userRole, requiredRoles)) {
+    toast({
+      title: 'Forbidden',
+      description: 'You do not have permission to add, edit, or delete a table',
+    });
+    return false;
+  }
+  return true;
+}
+
 const addPromotion = async () => {
+  if (!checkPermission()) return;
   newPromotion.value.startDate = new Date(newPromotion.value.startDate).toISOString()
   newPromotion.value.endDate = new Date(newPromotion.value.endDate).toISOString()
   await promotionStore.addPromotion(newPromotion.value)
@@ -35,6 +56,7 @@ const addPromotion = async () => {
 }
 
 const addPromotionForDish = async () => {
+  if (!checkPermission()) return;
   newPromotion.value.startDate = new Date(newPromotion.value.startDate).toISOString()
   newPromotion.value.endDate = new Date(newPromotion.value.endDate).toISOString()
   const promotionData = {
@@ -49,6 +71,7 @@ const addPromotionForDish = async () => {
 }
 
 const openEditModal = (promotion: any) => {
+  if (!checkPermission()) return;
   currentPromotion.value = { ...promotion }
   isEditPromotionModalOpen.value = true
 }
@@ -64,6 +87,7 @@ const editPromotion = async () => {
 }
 
 const deletePromotion = async (id: string) => {
+  if (!checkPermission()) return;
   await promotionStore.deletePromotion(id)
 }
 

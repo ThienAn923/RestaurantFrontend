@@ -5,8 +5,8 @@ import {useToast} from "./components/ui/toast"
 import path from 'path'
 const routes = [
   { path: '/login', component: () => import('./components/Login.vue') },
-  { path: '/Dashboard', component: () => import('./components/DashboardPage.vue'), meta: { requiresAuth: true, requiredRoles: [ROLES.ADMIN, ROLES.RECEPTIONIST] } },
-  { path: '/Dishes', component: () => import('./components/DishesManagementPage.vue'), meta: { requiresAuth: true, requiredRoles: [ROLES.ADMIN, ROLES.CHEF] } },
+  { path: '/Dashboard', component: () => import('./components/DashboardPage.vue'), meta: { requiresAuth: true, requiredRoles: [ROLES.ADMIN, ROLES.RECEPTIONIST, ROLES.CHEF] } },
+  { path: '/Dishes', component: () => import('./components/DishesManagementPage.vue'), meta: { requiresAuth: true, requiredRoles: [ROLES.ADMIN, ROLES.CHEF, ROLES.RECEPTIONIST, ROLES.SERVER] } },
   { path: '/DishType', component: () => import('./components/DishTypeManagementPage.vue'), meta: { requiresAuth: true, requiredRoles: [ROLES.ADMIN, ROLES.CHEF, ROLES.RECEPTIONIST, ROLES.SERVER]} },
   { path: '/table', component: () => import('./components/TablePage.vue'), meta: { requiresAuth: true, requiredRoles: [ROLES.ADMIN, ROLES.RECEPTIONIST, ROLES.CHEF, ROLES.SERVER] } },
   { path: '/position', component: () => import('./components/PositionManagementPage.vue'), meta: { requiresAuth: true, requiredRole: [ROLES.ADMIN] } },
@@ -40,8 +40,8 @@ router.beforeEach((to, from, next) => {
   const requiredRoles = to.meta.requiredRoles;
 
   if (requiredRoles && !hasPermission(authStore.userRole, requiredRoles)) {
-    // next('/Dashboard')
-    next(false);
+    next('/Login')
+    // next(false);
     // alert('You do not have permission to access this page');
     //the toast component is at the bottom of the page (Which is in app.vue)
     toast({

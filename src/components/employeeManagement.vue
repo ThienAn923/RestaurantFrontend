@@ -31,14 +31,17 @@ onMounted(async () => {
     })
   })
 })
-
+const result = ref('');
 const addEmployee = async () => {
+  console.log("Irun");
   newEmployee.value.employeeDateOfBirth = new Date(newEmployee.value.employeeDateOfBirth).toISOString();
   newEmployee.value.StartDay = new Date().toISOString();
-  const result = await employeeStore.addEmployee(newEmployee.value)
+  result.value = await employeeStore.addEmployee(newEmployee.value)
   isAddEmployeeModalOpen.value = false
-  if (result && result.account) {
-    createdAccount.value = result.account
+  console.log("Irun2");
+  if (result.value && result.value.account) {
+    createdAccount.value = result.value.account
+    console.log("Result: ", result.value);
     isAccountCreatedModalOpen.value = true
   }
   await employeeStore.fetchEmployees(employeeStore.currentPage)
@@ -183,41 +186,41 @@ const handleChange = () => {
     <Dialog v-model:open="isAddEmployeeModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Employee</DialogTitle>
+          <DialogTitle>Thêm Nhân Viên Mới</DialogTitle>
           <DialogDescription>
-            Enter the details for the new employee.
+            Nhập Thông Tin Cho Nhân Viên Mới Dưới Đây
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="addEmployee" class="space-y-4">
           <div class="space-y-2">
-            <Label for="name">Name</Label>
+            <Label for="name">Tên Nhân Viên</Label>
             <Input id="name" v-model="newEmployee.name" type="string" required />
           </div>
           <div class="space-y-2">
-            <Label for="address">Address</Label>
+            <Label for="address">Địa Chỉ</Label>
             <Input id="address" v-model="newEmployee.employeeAdress" required />
           </div>
           <div class="space-y-2">
-            <Label for="gender">Gender</Label>
+            <Label for="gender">Giới Tính</Label>
             <Select v-model="newEmployee.employeeGender" required>
               <SelectTrigger>
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem :value="true">Male</SelectItem>
-                <SelectItem :value="false">Female</SelectItem>
+                <SelectItem :value="true">Nam</SelectItem>
+                <SelectItem :value="false">Nữ</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div class="space-y-2">
-            <Label for="dob">Date of Birth</Label>
+            <Label for="dob">Ngày Sinh</Label>
             <Input id="dob" type="date" v-model="newEmployee.employeeDateOfBirth" required />
           </div>
           <div class="space-y-2">
-            <Label for="department">Department</Label>
+            <Label for="department">Bộ Phận</Label>
             <Select v-model="newEmployee.departmentId" required>
               <SelectTrigger>
-                <SelectValue placeholder="Select a department" />
+                <SelectValue placeholder="Chọn Bộ Phận Làm Việc" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem v-for="dept in employeeStore.departments" :key="dept.id" :value="dept.id">
@@ -227,10 +230,10 @@ const handleChange = () => {
             </Select>
           </div>
           <div class="space-y-2">
-            <Label for="position">Position</Label>
+            <Label for="position">Vị Trí</Label>
             <Select v-model="newEmployee.positionId" required>
               <SelectTrigger>
-                <SelectValue placeholder="Select a position" />
+                <SelectValue placeholder="Chọn Vị Trí" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem v-for="pos in employeeStore.positions" :key="pos.id" :value="pos.id">
@@ -258,7 +261,7 @@ const handleChange = () => {
             </Select>
           </div>
           <DialogFooter>
-            <Button type="submit">Add Employee</Button>
+            <Button type="submit">Thêm Nhân Viên</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -289,8 +292,8 @@ const handleChange = () => {
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem :value="true">Male</SelectItem>
-                <SelectItem :value="false">Female</SelectItem>
+                <SelectItem :value="true">Nam</SelectItem>
+                <SelectItem :value="false">Nữ</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -349,7 +352,7 @@ const handleChange = () => {
     </Dialog>
 
     <!-- Account Created Modal -->
-    <Dialog v-model:open="isAccountCreatedModalOpen">
+    <!-- <Dialog v-model:open="isAccountCreatedModalOpen">
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Account Created</DialogTitle>
@@ -369,6 +372,31 @@ const handleChange = () => {
         </div>
         <DialogFooter>
           <Button @click="isAccountCreatedModalOpen = false">Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog> -->
+
+    <Dialog v-model:open="isAccountCreatedModalOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Tài Khoản Nhân Viên Vừa Được Tạo</DialogTitle>
+          <DialogDescription>
+            Thông tin về tài khoản nhân viên vừa được tạo. Thông tin chỉ hiện ra 1 lần. Hãy lưu trữ thông tin này cẩn
+            thận.
+          </DialogDescription>
+        </DialogHeader>
+        <div class="space-y-4">
+          <div>
+            <Label>Tên Đăng Nhập</Label>
+            <Input v-model="result.AccountUsername" readonly />
+          </div>
+          <div>
+            <Label>Mật Khẩu</Label>
+            <Input v-model="result.AccountPassword" readonly />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button @click="isAccountCreatedModalOpen = false" class="hover:bg-red-600">Đóng</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

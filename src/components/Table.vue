@@ -9,6 +9,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Plus, Edit, Trash2 } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
 import socket from '../socket';
+import { useAuthStore } from './pinia/auth'
+import { hasPermission, ROLES } from './utils/permission'
+import { useToast } from "./ui/toast"
+
+const { toast } = useToast();
+const authStore = useAuthStore()
 
 
 //At first, you will confuse why there is 2 table interface
@@ -25,6 +31,19 @@ interface Table2 {
   tableNumber: number;
   numberOfSeats: number;
   status: boolean;
+}
+
+function checkPermission() {
+  const requiredRoles = [ROLES.ADMIN]; // Define the roles required to add a dish type
+  console.log(authStore.userRole, requiredRoles);
+  if (!hasPermission(authStore.userRole, requiredRoles)) {
+    toast({
+      title: 'Forbidden',
+      description: 'You do not have permission to add, edit, or delete a table',
+    });
+    return false;
+  }
+  return true;
 }
 
 
@@ -77,6 +96,7 @@ const newTable = ref<Omit<Table2, 'id'>>({
 const editingTable = ref<Table | null>(null);
 
 const openAddTableModal = () => {
+  if (!checkPermission()) return;
   isAddTableModalOpen.value = true;
 };
 
@@ -86,6 +106,7 @@ const closeAddTableModal = () => {
 };
 
 const openEditTableModal = (table: Table2) => {
+  if (!checkPermission()) return;
   //Lmao trust me on this one, it DOES exist!!!!!!!!!! (status)
   //i get the status out of the table object and put it in the tableStatus property (dont blame me, i write this code at 3am)
   const { status, ...tableWithoutStatus } = table;
@@ -104,6 +125,7 @@ const closeEditTableModal = () => {
 
 const submitTable = async () => {
   try {
+    if (!checkPermission()) return;
     //i use AI tui build this and it revolve around the newTable.value, sooo
     //i gotta map the newTable.value to the table object so it can be use with backend
     //Please don't hurt me T.T
@@ -136,6 +158,7 @@ const submitTable = async () => {
 };
 
 const updateTable = async () => {
+  if (!checkPermission()) return;
   if (!editingTable.value) return;
 
   try {
@@ -217,6 +240,7 @@ const updateTable = async () => {
 
 const deleteTable = async (id: string) => {
   try {
+    if (!checkPermission()) return;
     const response = await fetch(`http://localhost:3000/api/table/${id}`, {
       method: 'DELETE',
     });
