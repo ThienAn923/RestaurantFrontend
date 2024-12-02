@@ -12,7 +12,6 @@ import socket from '../socket';
 import { useAuthStore } from './pinia/auth'
 import { hasPermission, ROLES } from './utils/permission'
 import { useToast } from "./ui/toast"
-
 const { toast } = useToast();
 const authStore = useAuthStore()
 
@@ -38,8 +37,8 @@ function checkPermission() {
   console.log(authStore.userRole, requiredRoles);
   if (!hasPermission(authStore.userRole, requiredRoles)) {
     toast({
-      title: 'Forbidden',
-      description: 'You do not have permission to add, edit, or delete a table',
+      title: 'Bị cấm',
+      description: 'Tài khoản của bạn không thể thực hiện thao tác này',
     });
     return false;
   }
@@ -65,8 +64,8 @@ onMounted(async () => {
         numberOfSeats: updatedTable.seatNumber // Ensure numberOfSeats is updated correctly
       };
     }
-    console.log("Yooo, i got the /tableUpdate/ signal, im running at table.vue");
-    console.log("Printing tables at Table.vue: ", JSON.stringify(tables.value));
+    // console.log("Yooo, i got the /tableUpdate/ signal, im running at table.vue");
+    // console.log("Printing tables at Table.vue: ", JSON.stringify(tables.value));
   })
 
   try {
@@ -126,6 +125,7 @@ const closeEditTableModal = () => {
 const submitTable = async () => {
   try {
     if (!checkPermission()) return;
+    if (!validateNewTable()) return;
     //i use AI tui build this and it revolve around the newTable.value, sooo
     //i gotta map the newTable.value to the table object so it can be use with backend
     //Please don't hurt me T.T
@@ -144,22 +144,49 @@ const submitTable = async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(table),
     });
+    console.log(1);
+    const responseData = await response.json();
+    // console.log(response.json(), response.status);
+    console.log(2);
+    if (response.status === 201) {
+      // console.log(response.body);
+      const addedTable = responseData;
+      console.log("addedTable: ", addedTable);
+      //attemp1
+      // tables.value.push(responseData);
+      //attempt2
+      // tables.value.push({
+      //   id: addedTable.id,
+      //   tableNumber: addedTable.tableNum ber,
+      //   numberOfSeats: addedTable.seatNumber,
+      //   status: addedTable.tableStatus
+      // });
+      // tables.value = await fetchTables();
+      //attemp3
+      //The thing is the upper 2 attemps are not working, so i gotta re-fetch the tables from the backend
+      //There's not enough time to debug this, so i gotta do this
+      const tablesResponse = await fetch('http://localhost:3000/api/table')
+      const tablesData = await tablesResponse.json()
+      tables.value = tablesData.map((table) => ({
+        id: table.id,
+        tableNumber: table.tableNumber,
+        numberOfSeats: table.seatNumber,
+        status: table.tableStatus,
+      }))
 
-    if (response.ok) {
-      const addedTable = await response.json();
-      tables.value.push(addedTable);
       closeAddTableModal();
     } else {
       console.error('Failed to add table');
     }
   } catch (error) {
-    console.error('Error adding table:', error);
+    console.log('Error adding table:', error.message);
   }
 };
 
 const updateTable = async () => {
   if (!checkPermission()) return;
   if (!editingTable.value) return;
+  if (!validateEditingTable()) return;
 
   try {
     const { id, ...tableWithoutID } = editingTable.value;
@@ -200,60 +227,11 @@ const updateTable = async () => {
 };
 
 
-// const updateTable = async () => {
-//   if (!editingTable.value) return;
-
-//   try {
-//     const { id, ...tableWithoutID } = editingTable.value;
-//     const updatedTableData = {
-//       ...tableWithoutID,
-//       seatNumber: tableWithoutID.numberOfSeats // Ensure seatNumber is sent to the backend
-//     };
-
-//     console.log('Sending update:', JSON.stringify(updatedTableData));
-
-//     const response = await fetch(`http://localhost:3000/api/table/${id}`, {
-//       method: 'PUT',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify(updatedTableData),
-//     });
-
-//     if (response.ok) {
-//       const updatedTable = await response.json();
-//       console.log('Received updated table:', JSON.stringify(updatedTable));
-
-//       const index = tables.value.findIndex(t => t.id === updatedTable.id);
-//       if (index !== -1) {
-//         tables.value[index] = {
-//           ...updatedTable,
-//           numberOfSeats: updatedTable.seatNumber // Ensure numberOfSeats is updated correctly
-//         };
-//       }
-//       closeEditTableModal();
-//     } else {
-//       console.error('Failed to update table');
-//     }
-//   } catch (error) {
-//     console.error('Error updating table:', error);
-//   }
-// };
-
-const deleteTable = async (id: string) => {
-  try {
-    if (!checkPermission()) return;
-    const response = await fetch(`http://localhost:3000/api/table/${id}`, {
-      method: 'DELETE',
-    });
-
-    if (response.ok) {
-      tables.value = tables.value.filter(t => t.id !== id);
-    } else {
-      console.error('Failed to delete table');
-    }
-  } catch (error) {
-    console.error('Error deleting table:', error);
-  }
+const handleCheckedNewTable = () => {
+  // console.log("all table:", JSON.stringify(tables.value));
+  newTable.value.status = !newTable.value.status;
 };
+
 
 const resetNewTableForm = () => {
   newTable.value = {
@@ -261,6 +239,74 @@ const resetNewTableForm = () => {
     numberOfSeats: 0,
     status: true
   };
+};
+
+function validateNewTable() {
+  if (newTable.value.tableNumber < 1 || newTable.value.tableNumber === null) {
+    toast({
+      title: 'Lỗi',
+      description: 'Số bàn phải lớn hơn 0 và không được để trống',
+    });
+    return false;
+  }
+  if (newTable.value.numberOfSeats < 1 || newTable.value.numberOfSeats === null) {
+    toast({
+      title: 'Lỗi',
+      description: 'Số chỗ ngồi phải lớn hơn 0 và không được để trống',
+    });
+    return false;
+  }
+  return true;
+}
+
+function validateEditingTable() {
+  if (editingTable.value!.tableNumber < 1 || editingTable.value!.tableNumber === null) {
+    toast({
+      title: 'Lỗi',
+      description: 'Số bàn phải lớn hơn 0 và không được để trống',
+    });
+    return false;
+  }
+  if (editingTable.value!.numberOfSeats < 1 || editingTable.value!.numberOfSeats === null) {
+    toast({
+      title: 'Lỗi',
+      description: 'Số chỗ ngồi phải lớn hơn 0 và không được để trống',
+    });
+    return false;
+  }
+  return true;
+}
+
+const isDeleteDialogOpen = ref(false);
+const tableIDOfAboutToBeDeletedTable = ref('');
+const openDeleteConfirmDialog = (tableID: string) => {
+  console.log("tableID:", tableID);
+  tableIDOfAboutToBeDeletedTable.value = tableID;
+  isDeleteDialogOpen.value = true;
+}
+
+// const deleteTable = async () => {
+//   if (!checkPermission()) { return; }
+//   await deleteTable(tableIDOfAboutToBeDeletedDish.value);
+//   isDeleteDialogOpen.value = false;
+// }
+
+const deleteTable = async () => {
+  try {
+    if (!checkPermission()) return;
+    const response = await fetch(`http://localhost:3000/api/table/${tableIDOfAboutToBeDeletedTable.value}`, {
+      method: 'DELETE',
+    });
+
+    if (response.ok) {
+      tables.value = tables.value.filter(t => t.id !== tableIDOfAboutToBeDeletedTable.value);
+    } else {
+      console.error('Failed to delete table');
+    }
+    isDeleteDialogOpen.value = false;
+  } catch (error) {
+    console.error('Error deleting table:', error);
+  }
 };
 </script>
 
@@ -291,7 +337,7 @@ const resetNewTableForm = () => {
                 <Edit class="w-4 h-4 mr-2" />
                 Chỉnh Sửa
               </Button>
-              <Button variant="destructive" size="sm" @click="deleteTable(table.id)">
+              <Button variant="destructive" size="sm" @click="openDeleteConfirmDialog(table.id)">
                 <Trash2 class="w-4 h-4 mr-2" />
                 Xóa Bàn
               </Button>
@@ -305,30 +351,30 @@ const resetNewTableForm = () => {
     <Dialog v-model:open="isAddTableModalOpen">
       <DialogContent class="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Table</DialogTitle>
+          <DialogTitle>Thêm Bàn Mới</DialogTitle>
           <DialogDescription>
-            Enter the details of the new table below. Click save when you're done.
+            Nhập thông tin bàn mới dưới đây, sau đó nhấn lưu.
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="submitTable" class="space-y-4">
           <div>
-            <Label for="tableNumber">Table Number</Label>
+            <Label for="tableNumber">Bàn Số</Label>
             <Input id="tableNumber" v-model="newTable.tableNumber" type="number" required />
           </div>
 
           <div>
-            <Label for="numberOfSeats">Number of Seats</Label>
+            <Label for="numberOfSeats">Số chỗ ngồi</Label>
             <Input id="numberOfSeats" v-model="newTable.numberOfSeats" type="number" required />
           </div>
 
           <div class="flex items-center space-x-2">
-            <Switch id="status" v-model="newTable.status" />
-            <Label for="status">Available</Label>
+            <Switch id="status" :checked="newTable.status" @update:checked="handleCheckedNewTable" />
+            <Label for="status">Còn trống?</Label>
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" @click="closeAddTableModal">Cancel</Button>
-            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Save Table</Button>
+            <Button type="button" variant="outline" @click="closeAddTableModal">Hủy</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Lưu bàn</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -338,7 +384,7 @@ const resetNewTableForm = () => {
     <Dialog v-model:open="isEditTableModalOpen">
       <DialogContent class="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit Table</DialogTitle>
+          <DialogTitle>Chỉnh sửa bàn</DialogTitle>
           <DialogDescription>
             Thay đổi thông tin bàn, sau đó nhấn lưu thay đổi.
           </DialogDescription>
@@ -346,7 +392,7 @@ const resetNewTableForm = () => {
         <form v-if="editingTable" @submit.prevent="updateTable" class="space-y-4">
           <div>
             <Label for="editTableNumber">Bàn:</Label>
-            <Input id="editTableNumber" v-model="editingTable.tableNumber" type="number" required />
+            <Input id="editTableNumber" v-model="editingTable.tableNumber" type="number" required disabled />
           </div>
 
           <div>
@@ -355,15 +401,31 @@ const resetNewTableForm = () => {
           </div>
 
           <div class="flex items-center space-x-2">
-            <Switch id="editStatus" v-model="editingTable.tableStatus" :checked="editingTable.tableStatus" />
-            <Label for="editStatus">{{ editingTable.tableStatus ? 'Available' : 'Occupied' }}</Label>
+            <Switch id="editStatus" v-model:checked="editingTable.tableStatus" />
+            <Label for="editStatus">{{ editingTable.tableStatus ? 'Còn trống' : 'Hết Chỗ' }}</Label>
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" @click="closeEditTableModal">Cancel</Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="button" variant="outline" @click="closeEditTableModal">Hủy </Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Lưu thông tin</Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+
+
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xác nhận xóa bàn này?</DialogTitle>
+          <DialogDescription>
+            Bạn có chắc chắn muốn xóa bàn này không? Hành động này không thể hoàn tác trừ khi liên hệ với kỹ thuật viên.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button @click="isDeleteDialogOpen = false"> Hủy </Button>
+          <Button @click="deleteTable" class="bg-red-400 hover:bg-red-500 text-white">Xóa</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   </div>

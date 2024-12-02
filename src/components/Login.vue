@@ -61,7 +61,7 @@ const login = async () => {
     </CardContent>
     <CardFooter>
       <Button class="w-full" @click="login">
-        Sign in
+        Đăng nhập
       </Button>
     </CardFooter>
   </Card>

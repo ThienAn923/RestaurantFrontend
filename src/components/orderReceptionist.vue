@@ -139,10 +139,12 @@ const closeDialog = () => {
     isDialogOpen.value = false;
 };
 
-const handlePayment = () => {
+const handlePayment = async () => {
     // Logic for payment will be implemented later
     // console.log("SelectedClient id from orderReceptionist: ", selectedCustomer.value?.id);
     invoiceStore.createInvoice(selectedOrder.value?.id, selectedCustomer.value?.id);
+    await orderStore.fetchOrders(1);
+    finishedOrders.value = orderStore.orders.filter(order => order.orderStatus === 'finished');
 
     // console.log('Order:', JSON.stringify(selectedOrder.value));
     // console.log('Payment for order:', selectedOrder.value?.id);

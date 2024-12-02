@@ -96,6 +96,7 @@ interface Dish {
   promotionID: string | null;
   costs: Cost[];
   images: Image[];
+  timeToCook: number;
 }
 
 interface Image {
@@ -165,6 +166,7 @@ const newDish = ref({
   price: '',
   available: true,
   dishType: '',
+  timeToCook: 0,
   images: [] as File[]
 })
 
@@ -200,7 +202,9 @@ const uploadProgress = ref(0);
 //     }
 //   }
 // };
+const isUploading = ref(false)
 const handleImageUpload = async (event: Event) => {
+  isUploading.value = true
   const target = event.target as HTMLInputElement;
   if (target.files) {
     const files = Array.from(target.files);
@@ -236,7 +240,9 @@ const handleImageUpload = async (event: Event) => {
         title: 'Đã tải xong',
         description: 'Hình ảnh tải lên thành công',
       });
+      isUploading.value = false
     } catch (error) {
+      isUploading.value = false
       toast({
         title: 'Tải Thất bại',
         description: 'Không thể tải ảnh lên',
@@ -245,15 +251,36 @@ const handleImageUpload = async (event: Event) => {
   }
 };
 
+function checkForError() {
+  if (
+    newDish.value.available === null ||
+    newDish.value.dishType === null ||
+    newDish.value.name === null ||
+    newDish.value.name === '' ||
+    newDish.value.name.length > 100 ||
+    newDish.value.description.length > 1024 ||
+    isNaN(Number(newDish.value.price)) ||
+    isNaN(Number(newDish.value.timeToCook))
+  ) {
+    return false;
+  }
+  return true;
+}
 const submitDish = async () => {
   // Prepare the data to send to the backend
-  console.log("AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
-  console.log("Uploaded image urls: ", uploadedImageUrls.value[0]);
+  if (!checkForError()) {
+    toast({
+      title: 'Dữ liệu nhập vào không đúng',
+      description: 'Hãy đảm bảo nhập đủ các trường. Hãy đảm bảo tên món ăn ít hơn 100 ký tự, mô tả món ăn phải ít hơn 1024 ký tự',
+    });
+    return;
+  }
   const data = {
     DishName: newDish.value.name,
     DishDescription: newDish.value.description,
     Cost: newDish.value.price,
     DishType: newDish.value.dishType,
+    timeToCook: newDish.value.timeToCook,
     imageLinks: uploadedImageUrls.value,
   };
 
@@ -285,25 +312,33 @@ const submitDish = async () => {
   closeAddDishModal();
 };
 
-// const editDish = async () => {
-//   // Prepare the data to send to the backend
-//   const data = {
-//     id: selectedDish.value?.id,
-//     name: selectedDish.value?.name,
-//     description: selectedDish.value?.description,
-//     cost: selectedDish.value?.costs[0].cost,
-//     DishType: selectedDish.value?.DishType.id,
-//     available: selectedDish.value?.available,
-//     imageLinks: selectedDish.value?.images,
-//   };
-//   console.log(JSON.stringify(data));
-//   dishStore.updateDish(data);
-//   console.log("Yooooo", selectedDish.value?.DishType?.DishTypeName);
-//   closeDialog();
-// }
+function checkForSelectedDishError() {
+  if (
+    selectedDish.value === null ||
+    selectedDish.value.available === null ||
+    selectedDish.value.DishType.id === null ||
+    selectedDish.value.name === null ||
+    selectedDish.value.name === '' ||
+    selectedDish.value.name.length > 100 ||
+    selectedDish.value.description.length > 1024 ||
+    isNaN(Number(selectedDish.value.costs[0].cost)) ||
+    isNaN(Number(selectedDish.value.timeToCook))
+  ) {
+    return false;
+  }
+  return true;
+}
 
 const editDish = async () => {
   // Prepare the data to send to the backend
+  if (!checkForSelectedDishError) {
+    toast({
+      title: 'Không thể chỉnh sửa món ăn',
+      description: 'Hãy đảm bảo nhập đủ các trường. Hãy đảm bảo tên món ăn ít hơn 100 ký tự, mô tả món ăn phải ít hơn 1024 ký tự',
+
+    });
+    return;
+  }
   const data = {
     id: selectedDish.value?.id,
     name: selectedDish.value?.name,
@@ -311,6 +346,7 @@ const editDish = async () => {
     cost: selectedDish.value?.costs[0].cost,
     DishType: selectedDish.value?.DishType.id,
     available: selectedDish.value?.available,
+    timeToCook: selectedDish.value?.timeToCook,
     imageLinks: selectedDish.value?.images ? [...selectedDish.value.images.map(image => image.Link), ...uploadedImageUrls.value] : uploadedImageUrls.value,
   };
   console.log(JSON.stringify(data));
@@ -373,18 +409,22 @@ watch([filterStatus, filterType], async () => {
   searchDish();
 });
 
-async function handleDelete(dishID: string) {
+
+
+
+async function handleDelete() {
   try {
-    console.log("DishID: ", dishID);
-    const response = await dishStore.deleteDish(dishID);
+    console.log("DishID: ", dishIDOfAboutToBeDeletedDish.value);
+    const response = await dishStore.deleteDish(dishIDOfAboutToBeDeletedDish.value);
     console.log(response);
-    if (response.status === 204) {
+    if (response!.status === 204) {
       toast({
         title: 'Xóa thành công',
         description: 'Món ăn đã được xóa',
       });
       await dishStore.fetchDish(1);
       dishes.value = dishStore.dish;
+      isDeleteDialogOpen.value = false;
     }
   } catch {
     toast({
@@ -395,6 +435,14 @@ async function handleDelete(dishID: string) {
 }
 
 
+const isDeleteDialogOpen = ref(false);
+const dishIDOfAboutToBeDeletedDish = ref('');
+
+const openDeleteConfirmDialog = (dishID: string) => {
+  console.log("disdhID:", dishID);
+  dishIDOfAboutToBeDeletedDish.value = dishID;
+  isDeleteDialogOpen.value = true;
+}
 
 
 //This one is only for money format
@@ -432,6 +480,20 @@ const removeImage = (index: number) => {
 watch(selectedDish, (newVal) => {
   console.log("image link", JSON.stringify(newVal?.images));
 })
+
+
+
+const formattedTimeToCook = computed({
+  get() {
+    return `${selectedDish?.value!.timeToCook} phút`
+  },
+  set(value) {
+    if (selectedDish.value) {
+      selectedDish.value.timeToCook = parseFloat(value.replace(' phút', ''));
+    }
+  }
+})
+
 
 
 </script>
@@ -518,7 +580,7 @@ watch(selectedDish, (newVal) => {
                 <Edit class="w-4 h-4 mr-2" />
                 Chỉnh Sửa
               </Button>
-              <Button variant="destructive" size="sm" @click="handleDelete(dish.id)">
+              <Button variant="destructive" size="sm" @click="openDeleteConfirmDialog(dish.id)">
                 <Trash2 class="w-4 h-4 mr-2" />
                 Xóa
               </Button>
@@ -531,11 +593,11 @@ watch(selectedDish, (newVal) => {
 
     <!-- Add Dish Modal -->
     <Dialog v-model:open="isAddDishModalOpen">
-      <DialogContent class="sm:max-w-[425px]">
+      <DialogContent class="sm:max-w-[475px]">
         <DialogHeader>
-          <DialogTitle>Add New Dish</DialogTitle>
+          <DialogTitle>Thêm Món Ăn</DialogTitle>
           <DialogDescription>
-            Enter the details of the new dish below. Click save when you're done.
+            Nhập thông tin cho món ăn bên dưới, sau đó nhấn lưu để lưu món ăn.
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="submitDish" class="space-y-4">
@@ -546,7 +608,7 @@ watch(selectedDish, (newVal) => {
 
           <div>
             <Label for="description">Mô Tả</Label>
-            <Textarea id="description" v-model="newDish.description" required />
+            <Textarea id="description" v-model="newDish.description" />
           </div>
 
           <div>
@@ -558,7 +620,7 @@ watch(selectedDish, (newVal) => {
             <Label for="dishType">Loại Món</Label>
             <Select v-model="newDish.dishType">
               <SelectTrigger>
-                <SelectValue placeholder="Select a dish type" />
+                <SelectValue placeholder="Chọn Loại Món Ăn" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem v-for="type in dishTypes" :key="type.id" :value="type.id">
@@ -567,6 +629,12 @@ watch(selectedDish, (newVal) => {
               </SelectContent>
             </Select>
           </div>
+
+          <div>
+            <label for="timeToCook">Thời Gian Nấu(Phút)</label>
+            <Input id="timeToCook" type="number" v-model="newDish.timeToCook" required />
+          </div>
+
 
           <div class="flex items-center space-x-2">
             <Switch id="available" v-model="newDish.available" />
@@ -578,9 +646,11 @@ watch(selectedDish, (newVal) => {
             <Input id="image" type="file" accept="image/*" @change="handleImageUpload" />
           </div>
 
+
           <DialogFooter>
             <Button type="button" variant="outline" @click="closeAddDishModal">Thoát</Button>
-            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Lưu Món Ăn</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white" :disabled="isUploading">Lưu Món
+              Ăn</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -590,10 +660,10 @@ watch(selectedDish, (newVal) => {
     <Dialog v-model:open="isAddDishTypeModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Dish Type</DialogTitle>
+          <DialogTitle>Thêm Loại món ăn</DialogTitle>
         </DialogHeader>
         <!-- Add form for new dish type here -->
-        <p>Dish Type form goes here</p>
+        <p>Thêm loại món ăn bằng cách nhập các thông tin dưới đây</p>
         <DialogFooter>
           <Button @click="isAddDishTypeModalOpen = false">Close</Button>
         </DialogFooter>
@@ -625,7 +695,7 @@ watch(selectedDish, (newVal) => {
               <Label for="dishType">Loại Món</Label>
               <Select v-model="selectedDish.DishType.id">
                 <SelectTrigger>
-                  <SelectValue :value="selectedDish.DishType.DishTypeName || 'Select a dish type'" />
+                  <SelectValue :value="selectedDish.DishType.DishTypeName || 'Chọn Loại Món Ăn'" required />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem v-for="type in dishTypes" :key="type.id" :value="type.id">
@@ -647,7 +717,13 @@ watch(selectedDish, (newVal) => {
 
           <div v-if="selectedDish">
             <Label for="description">Mô Tả</Label>
-            <Textarea id="description" v-model="selectedDish.description" required rows="3" />
+            <Textarea id="description" v-model="selectedDish.description" rows="3" />
+          </div>
+
+          <div v-if="selectedDish">
+            <Label for="timeToCook">Thời gian nấu</Label>
+            <Input id="timeToCook" v-model="selectedDish.timeToCook" type="number" required
+              :placeholder="selectedDish.timeToCook === 0 ? 'No data' : ''" />
           </div>
 
           <div class="space-y-2">
@@ -687,25 +763,25 @@ watch(selectedDish, (newVal) => {
         </DialogHeader>
         <form class="space-y-4">
           <div v-if="selectedDish">
-            <Label for="name">Dish Name</Label>
+            <Label for="name">Tên Món Ăn</Label>
             <Input id="name" v-model="selectedDish.name" readonly />
           </div>
 
           <div v-if="selectedDish">
-            <Label for="description">Description</Label>
+            <Label for="description">Mô Tả</Label>
             <Textarea id="description" v-model="selectedDish.description" readonly />
           </div>
 
           <div v-if="selectedDish">
-            <Label for="price">Price</Label>
+            <Label for="price">Giá</Label>
             <Input id="price" v-model="formattedCost" type="string" step="0.01" readonly />
           </div>
 
           <div v-if="selectedDish">
-            <Label for="dishType">Dish Type</Label>
+            <Label for="dishType">Loại Món</Label>
             <Select v-model="selectedDish.DishType.id" disabled>
               <SelectTrigger>
-                <SelectValue :value="selectedDish.DishType.DishTypeName || 'Select a dish type'" />
+                <SelectValue :value="selectedDish.DishType.DishTypeName || 'Chọn loại món ăn'" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem v-for="type in dishTypes" :key="type.id" :value="type.id">
@@ -715,11 +791,36 @@ watch(selectedDish, (newVal) => {
             </Select>
           </div>
 
+          <div v-if="selectedDish">
+            <Label for="timeToCook">Thời Gian Nấu</Label>
+            <div class="flex items-center">
+              <Input id="timeToCook" v-model="formattedTimeToCook" type="string" step="0.01" readonly />
+            </div>
+          </div>
+
+
           <div class="flex items-center space-x-2" v-if="selectedDish">
             <Switch id="available" @update:checked="updateState" :checked="selectedDish.available" disabled />
             <Label for="available">Còn Phục Vụ</Label>
           </div>
         </form>
+      </DialogContent>
+    </Dialog>
+
+
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xóa món ăn?</DialogTitle>
+          <DialogDescription>
+            Hãy thực sự chắc chắn rằng bạn đang muốn xóa món ăn này. Mọi thông tin bị xóa đều không thể trở lại trừ khi
+            liên hệ với một kỹ thuật viên.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button @click="isDeleteDialogOpen = false"> Hủy </Button>
+          <Button @click="handleDelete" class="bg-red-400 hover:bg-red-500 text-white">Xóa</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   </div>

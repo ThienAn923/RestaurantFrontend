@@ -38,8 +38,8 @@ function checkPermission() {
   console.log(authStore.userRole, requiredRoles);
   if (!hasPermission(authStore.userRole, requiredRoles)) {
     toast({
-      title: 'Forbidden',
-      description: 'You do not have permission to add, edit, or delete a table',
+      title: 'Bị cấm',
+      description: 'Tài khoản của bạn không thể thực hiện thao tác này',
     });
     return false;
   }
@@ -311,7 +311,7 @@ const toVietnamese = (type: string) => {
           </DialogHeader>
           <form @submit.prevent="addPromotionForDish" class="space-y-4 dialog-content-scroll">
             <div class="space-y-2">
-              <Label for="name">Teen Khuyến Mãi</Label>
+              <Label for="name">Tên Khuyến Mãi</Label>
               <Input id="name" v-model="newPromotion.promotionName" required />
             </div>
             <div class="space-y-2">

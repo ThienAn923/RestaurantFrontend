@@ -26,6 +26,7 @@ export const useMessageStore = defineStore('message', () => {
 
   const fetchMessageWithRoomId = async (roomId: string) => {
     try {
+      console.log(roomId);
       const response = await fetch(`http://localhost:3000/api/messageChat/room/${roomId}`);
       if (!response.ok) {
         throw new Error(`Error fetching messages: ${response.statusText}`);
@@ -69,17 +70,40 @@ export const useMessageStore = defineStore('message', () => {
       console.error("Failed to fetch room:", error);
     }
   };
-
-  const sendMessage = async (clientId: string, roomId: string, text: string, senderId = 'me', senderType = true) => {
+  const fetchRoomWithClientId = async (clientId: string) =>{
+    try {
+      const response = await fetch(`http://localhost:3000/api/roomChat/client/${clientId}`);
+      
+      console.log( `clientId ${clientId}`);
+      const roomData = await response.json();
+      console.log('Fetched room data:', roomData);
+  
+      // Mapping dữ liệu nhận được thành kiểu `Room`
+      const room: Room = {
+        id: roomData.id,
+        roomKey: roomData.roomKey,
+        clientId: roomData.clientId,
+        employeeId: roomData.employeeId,
+        createdAt: new Date(roomData.createdAt),
+        updatedAt: new Date(roomData.updatedAt),
+      };
+  
+      return room; // Trả về phòng đã tìm thấy
+    } catch (error) {
+      console.error('Error fetching room with clientId:', error);
+      return null; // Trả về null nếu xảy ra lỗi
+    }
+  };
+  
+  const sendMessage = async (senderId: string, roomId: string, text: string) => {
     const newMessage: Message = {
       id: new Date().toISOString(),
       senderId,
       text,
       roomId,
       createdAt: new Date(),
-      senderType,
+      senderType:false,
     };
-
     try {
       const response = await fetch(`http://localhost:3000/api/messageChat`, {
         method: 'POST',
@@ -87,7 +111,6 @@ export const useMessageStore = defineStore('message', () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          clientId,
           senderId: newMessage.senderId,
           text: newMessage.text,
           roomId: newMessage.roomId,
@@ -95,14 +118,10 @@ export const useMessageStore = defineStore('message', () => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Error sending message: ${response.statusText}`);
-      }
-
+      console.log(response.body);
       const savedMessage = await response.json();
       newMessage.id = savedMessage._id; // Update the message ID with the one from the server
       messages.value.push(newMessage);
-      console.log(`Message sent to client ${clientId} in room ${roomId}: ${text}`);
     } catch (error) {
       console.error("Failed to send message:", error);
     }
@@ -111,6 +130,7 @@ export const useMessageStore = defineStore('message', () => {
   return {
     messages,
     rooms,
+    fetchRoomWithClientId,
     fetchMessageWithRoomId,
     fetchRoomWithRoomId,
     sendMessage,

@@ -45,8 +45,8 @@ router.beforeEach((to, from, next) => {
     // alert('You do not have permission to access this page');
     //the toast component is at the bottom of the page (Which is in app.vue)
     toast({
-        title: 'Forbidden',
-        description: 'You do not have permission to access this page',
+        title: 'Bị cấm',
+        description: 'Tài khoản của bạn không thể thực hiện thao tác này',
       });
   }
   

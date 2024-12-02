@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useProviderStore } from './pinia/provider.store'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { useToast } from "./ui/toast"
+const { toast } = useToast();
 
 const providerStore = useProviderStore()
 
@@ -43,11 +45,11 @@ const sortOrder = ref<'asc' | 'desc'>('asc')
 
 //Color for each status option
 const statusOptions = [
-  { value: 'Potential', label: 'Potential', color: 'bg-blue-100 text-blue-800' },
-  { value: 'Normal', label: 'Normal', color: 'bg-gray-100 text-gray-800' },
-  { value: 'Important', label: 'Important', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'Very Important', label: 'Very Important', color: 'bg-red-100 text-red-800' },
-  { value: 'Custom', label: 'Custom', color: 'bg-purple-100 text-purple-800' },
+  { value: 'Potential', label: 'Tiềm Năng', color: 'bg-blue-100 text-blue-800' },
+  { value: 'Normal', label: 'Bình thường', color: 'bg-gray-100 text-gray-800' },
+  { value: 'Important', label: 'Quan Trọng', color: 'bg-yellow-100 text-yellow-800' },
+  { value: 'Very Important', label: 'Rất Quan Trọng', color: 'bg-red-100 text-red-800' },
+  { value: 'Custom', label: 'Tùy Chỉnh', color: 'bg-purple-100 text-purple-800' },
 ]
 
 onMounted(() => {
@@ -56,6 +58,7 @@ onMounted(() => {
 
 const customStatus = ref('')
 const addProvider = async () => {
+  if (!isValidNewProvider()) return;
   const providerData = { ...newProvider.value }
   if (providerData.providerStatus === 'Custom') {
     providerData.providerStatus = customStatus.value
@@ -84,6 +87,7 @@ const openInfoModal = (provider: typeof currentProvider.value) => {
 }
 
 const editProvider = async () => {
+  if (!isValidEditProvider()) return;
   const providerData = { ...currentProvider.value }
   if (providerData.providerStatus === 'Custom') {
     providerData.providerStatus = providerData.customStatus
@@ -92,9 +96,7 @@ const editProvider = async () => {
   isEditModalOpen.value = false
 }
 
-const deleteProvider = async (id: string) => {
-  await providerStore.deleteProvider(id)
-}
+
 
 //This function is used to display the page numbers in the pagination section
 const pageNumbers = computed(() => {
@@ -163,6 +165,80 @@ watch([searchQuery], () => {
   providerStore.setSearch(searchQuery.value);
   providerStore.fetchProviders(1)
 })
+
+
+const isDeleteDialogOpen = ref(false);
+const IDOfObjectAboutToBeDeleted = ref('');
+const openDeleteConfirmDialog = (tableID: string) => {
+  // console.log("tableID:", tableID);
+  IDOfObjectAboutToBeDeleted.value = tableID;
+  isDeleteDialogOpen.value = true;
+}
+
+const deleteProvider = async () => {
+  try {
+    await providerStore.deleteProvider(IDOfObjectAboutToBeDeleted.value)
+    isDeleteDialogOpen.value = false;
+  } catch (e) {
+    toast({
+      title: 'Không thể xóa nhà cung cấp',
+      description: 'Không thể xóa nhà cung cấp. Hãy thử lại sau',
+    });
+  }
+}
+
+const isValidNewProvider = () => {
+  const providerData = newProvider.value;
+  console.log("I run");
+  console.log(JSON.stringify(providerData));
+  if (!providerData.providerName || providerData.providerName.length > 100) {
+    toast({ title: 'Lỗi', description: 'Tên nhà cung cấp không hợp lệ' });
+    return false;
+  }
+  if (providerData.providerDescription.length > 1024) {
+    toast({ title: 'Lỗi', description: 'Mô tả nhà cung cấp không hợp lệ' });
+    return false;
+  }
+  if (providerData.providerEmail.length > 1024) {
+    toast({ title: 'Lỗi', description: 'Email nhà cung cấp không hợp lệ' });
+    return false;
+  }
+  if (providerData.providerPhoneNumber.length > 20 || !/^\d+$/.test(providerData.providerPhoneNumber)) {
+    toast({ title: 'Lỗi', description: 'Số điện thoại nhà cung cấp không hợp lệ' });
+    return false;
+  }
+  if (providerData.providerAddress.length > 1024) {
+    toast({ title: 'Lỗi', description: 'Địa chỉ nhà cung cấp không hợp lệ' });
+    return false;
+  }
+  return true;
+}
+
+const isValidEditProvider = () => {
+  const providerData = currentProvider.value;
+  if (!providerData.providerName || providerData.providerName.length > 100) {
+    toast({ title: 'Lỗi', description: 'Tên nhà cung cấp không hợp lệ' });
+    return false;
+  }
+  if (providerData.providerDescription.length > 1024) {
+    toast({ title: 'Lỗi', description: 'Mô tả nhà cung cấp không hợp lệ' });
+    return false;
+  }
+  if (providerData.providerEmail.length > 1024) {
+    toast({ title: 'Lỗi', description: 'Email nhà cung cấp không hợp lệ' });
+    return false;
+  }
+  if (providerData.providerPhoneNumber.length > 20 || !/^\d+$/.test(providerData.providerPhoneNumber)) {
+    toast({ title: 'Lỗi', description: 'Số điện thoại nhà cung cấp không hợp lệ' });
+    return false;
+  }
+  if (providerData.providerAddress.length > 1024) {
+    toast({ title: 'Lỗi', description: 'Địa chỉ nhà cung cấp không hợp lệ' });
+    return false;
+  }
+  return true;
+}
+
 
 </script>
 
@@ -255,7 +331,7 @@ watch([searchQuery], () => {
                 class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" @click="deleteProvider(provider.id)"
+              <Button variant="ghost" size="icon" @click="openDeleteConfirmDialog(provider.id)"
                 class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
@@ -294,33 +370,33 @@ watch([searchQuery], () => {
       <ScrollArea>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Provider</DialogTitle>
+            <DialogTitle>Thêm Nhà Cung Cấp Mới</DialogTitle>
             <DialogDescription>
-              Enter the details for the new provider.
+              Điền thông tin dưới đây để thêm nhà cung cấp mới.
             </DialogDescription>
           </DialogHeader>
           <form @submit.prevent="addProvider" class="space-y-4">
             <div class="space-y-2">
-              <Label for="name">Name</Label>
+              <Label for="name">Tên nhà cung cấp</Label>
               <Input id="name" v-model="newProvider.providerName" required />
             </div>
             <div class="space-y-2">
               <Label for="email">Email</Label>
-              <Input id="email" type="email" v-model="newProvider.providerEmail" required />
+              <Input id="email" type="email" v-model="newProvider.providerEmail" />
             </div>
             <div class="space-y-2">
-              <Label for="phoneNumber">Phone Number</Label>
-              <Input id="phoneNumber" v-model="newProvider.providerPhoneNumber" required />
+              <Label for="phoneNumber">Số điện thoại</Label>
+              <Input id="phoneNumber" v-model="newProvider.providerPhoneNumber" />
             </div>
             <div class="space-y-2">
-              <Label for="address">Address</Label>
+              <Label for="address">Địa chỉ</Label>
               <Textarea id="address" v-model="newProvider.providerAddress" />
             </div>
             <div class="space-y-2">
-              <Label for="status">Status</Label>
+              <Label for="status">Trạng thái</Label>
               <Select v-model="newProvider.providerStatus">
                 <SelectTrigger>
-                  <SelectValue placeholder="Select provider status" />
+                  <SelectValue placeholder="Chọn trạng thái nhà cung cấp" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
@@ -330,15 +406,15 @@ watch([searchQuery], () => {
               </Select>
             </div>
             <div v-if="newProvider.providerStatus === 'Custom'" class="space-y-2">
-              <Label for="customStatus">Custom Status</Label>
+              <Label for="customStatus">Tự Chọn</Label>
               <Input id="customStatus" v-model="customStatus" required />
             </div>
             <div class="space-y-2">
-              <Label for="description">Description</Label>
+              <Label for="description">Mô tả</Label>
               <Textarea id="description" v-model="newProvider.providerDescription" />
             </div>
             <DialogFooter>
-              <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Provider</Button>
+              <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Thêm Nhà Cung Cấp</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -349,33 +425,33 @@ watch([searchQuery], () => {
     <Dialog v-model:open="isEditModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Provider</DialogTitle>
+          <DialogTitle>Chỉnh Sửa Nhà Cung Cấp</DialogTitle>
           <DialogDescription>
-            Make changes to the provider.
+            Thay đổi thông tin của nhà cung cấp dưới đây.
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="editProvider" class="space-y-4">
           <div class="space-y-2">
-            <Label for="edit-name">Name</Label>
+            <Label for="edit-name">Tên nhà cung cấp</Label>
             <Input id="edit-name" v-model="currentProvider.providerName" required />
           </div>
           <div class="space-y-2">
-            <Label for="edit-email">Email</Label>
-            <Input id="edit-email" type="email" v-model="currentProvider.providerEmail" required />
+            <Label for="edit-email"> Địa chỉ mail</Label>
+            <Input id="edit-email" type="email" v-model="currentProvider.providerEmail" />
           </div>
           <div class="space-y-2">
-            <Label for="edit-phoneNumber">Phone Number</Label>
-            <Input id="edit-phoneNumber" v-model="currentProvider.providerPhoneNumber" required />
+            <Label for="edit-phoneNumber">Số điện thoại</Label>
+            <Input id="edit-phoneNumber" v-model="currentProvider.providerPhoneNumber" />
           </div>
           <div class="space-y-2">
-            <Label for="edit-address">Address</Label>
+            <Label for="edit-address">Địa Chỉ</Label>
             <Textarea id="edit-address" v-model="currentProvider.providerAddress" />
           </div>
           <div class="space-y-2">
-            <Label for="edit-status">Status</Label>
+            <Label for="edit-status">Trạng Thái</Label>
             <Select v-model="currentProvider.providerStatus">
               <SelectTrigger>
-                <SelectValue placeholder="Select provider status" />
+                <SelectValue placeholder="Chọn trạng thái" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
@@ -387,15 +463,18 @@ watch([searchQuery], () => {
           <div
             v-if="!statusOptions.some(option => option.value === currentProvider.providerStatus) || currentProvider.providerStatus === 'Custom'"
             class="space-y-2">
-            <Label for="edit-customStatus">Custom Status</Label>
-            <Input id="edit-customStatus" v-model="currentProvider.providerStatus" required />
+            <Label for="edit-customStatus">Trạng thái</Label>
+            <Input id="edit-customStatus" v-model="currentProvider.providerStatus" placeholder="Tự Chọn" required />
+            <p>{{ currentProvider.providerStatus === 'Custom' ? currentProvider.providerStatus :
+              statusOptions.find(option =>
+                option.value === currentProvider.providerStatus)?.label }}</p>
           </div>
           <div class="space-y-2">
-            <Label for="edit-description">Description</Label>
+            <Label for="edit-description">Mô tả</Label>
             <Textarea id="edit-description" v-model="currentProvider.providerDescription" />
           </div>
           <DialogFooter>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit">Lưu Thay Đổi</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -405,44 +484,61 @@ watch([searchQuery], () => {
     <Dialog v-model:open="isInfoModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Provider Information</DialogTitle>
+          <DialogTitle>Thông Tin Nhà Cung Cấp</DialogTitle>
         </DialogHeader>
         <div class="space-y-4">
           <div>
-            <Label class="font-bold">Name:</Label>
+            <Label class="font-bold">Tên Nhà Cung Cấp:</Label>
             <p>{{ currentProvider.providerName }}</p>
           </div>
           <div>
-            <Label class="font-bold">Email:</Label>
+            <Label class="font-bold">Địa Chỉ Mail:</Label>
             <p>{{ currentProvider.providerEmail }}</p>
           </div>
           <div>
-            <Label class="font-bold">Phone Number:</Label>
+            <Label class="font-bold">Số Điện Thoại:</Label>
             <p>{{ currentProvider.providerPhoneNumber }}</p>
           </div>
           <div>
-            <Label class="font-bold">Address:</Label>
+            <Label class="font-bold">Địa Chỉ:</Label>
             <p>{{ currentProvider.providerAddress || 'N/A' }}</p>
           </div>
           <div>
-            <Label class="font-bold">Status:</Label>
+            <Label class="font-bold">Trạng thái:</Label>
             <p>{{ currentProvider.providerStatus }}</p>
           </div>
           <div>
-            <Label class="font-bold">Description:</Label>
+            <Label class="font-bold">Mô tả:</Label>
             <p>{{ currentProvider.providerDescription || 'N/A' }}</p>
           </div>
           <div>
-            <Label class="font-bold">Created At:</Label>
+            <Label class="font-bold">Ngày Tạo:</Label>
             <p>{{ new Date(currentProvider.createAt).toLocaleString() }}</p>
           </div>
           <div>
-            <Label class="font-bold">Updated At:</Label>
+            <Label class="font-bold">Ngày Chỉnh Sửa:</Label>
             <p>{{ new Date(currentProvider.updateAt).toLocaleString() }}</p>
           </div>
         </div>
         <DialogFooter>
-          <Button @click="isInfoModalOpen = false">Close</Button>
+          <Button @click="isInfoModalOpen = false">Đóng</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xác nhận xóa nhà cung cấp này?</DialogTitle>
+          <DialogDescription>
+            Bạn có chắc chắn muốn xóa nhà cung cấp này không? Hành động này không thể hoàn tác trừ khi liên hệ với kỹ
+            thuật viên.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button @click="isDeleteDialogOpen = false"> Hủy </Button>
+          <Button @click="deleteProvider" class="bg-red-400 hover:bg-red-500 text-white">Xóa</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

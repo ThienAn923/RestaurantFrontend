@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useClientStore } from './pinia/client.store'
-import { useToast } from 'vue-toastification'
+import { useToast } from '@/components/ui/toast'
 
 
 

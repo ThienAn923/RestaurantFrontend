@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useIngredientStore } from './pinia/ingredient.store'
+import { useToast } from "./ui/toast"
+const { toast } = useToast();
 
 const ingredientStore = useIngredientStore()
 
@@ -30,6 +32,7 @@ onMounted(async () => {
 
 
 const addIngredient = async () => {
+  if (!validateNewIngredient()) return;
   await ingredientStore.addIngredient(newIngredient.value)
   isAddIngredientModalOpen.value = false
   newIngredient.value = { ingredientName: '', ingredientTypeID: '' }
@@ -41,15 +44,15 @@ const openEditModal = (ingredient: { id: string; ingredientName: string; ingredi
 }
 
 const editIngredient = async () => {
+  if (!validateCurrentIngredient()) return;
   await ingredientStore.updateIngredient(currentIngredient.value)
   isEditIngredientModalOpen.value = false
 }
 
-const deleteIngredient = async (id: string) => {
-  await ingredientStore.deleteIngredient(id)
-}
+
 
 const addIngredientType = async () => {
+  if (!validateNewIngredientType()) return;
   await ingredientStore.addIngredientType(newIngredientType.value)
   isAddIngredientTypeModalOpen.value = false
   newIngredientType.value = { ingredientTypeName: '', ingredientTypeDescription: '' }
@@ -112,6 +115,79 @@ watch([searchQuery], () => {
   ingredientStore.setSearch(searchQuery.value);
   ingredientStore.fetchIngredients(1)
 })
+
+const validateNewIngredient = () => {
+  if (!newIngredient.value.ingredientName || newIngredient.value.ingredientName.length > 100) {
+    toast({
+      title: 'Lỗi',
+      description: 'Tên nguyên liệu không được để trống và phải nhỏ hơn 100 ký tự',
+    });
+    return false;
+  }
+  if (!newIngredient.value.ingredientTypeID) {
+    toast({
+      title: 'Lỗi',
+      description: 'Loại nguyên liệu không được để trống',
+    });
+    return false;
+  }
+  return true;
+};
+
+const validateCurrentIngredient = () => {
+  if (!currentIngredient.value.ingredientName || currentIngredient.value.ingredientName.length > 100) {
+    toast({
+      title: 'Lỗi',
+      description: 'Tên nguyên liệu không được để trống và phải nhỏ hơn 100 ký tự',
+    });
+    return false;
+  }
+  if (!currentIngredient.value.ingredientTypeID) {
+    toast({
+      title: 'Lỗi',
+      description: 'Loại nguyên liệu không được để trống',
+    });
+    return false;
+  }
+  return true;
+};
+
+
+const validateNewIngredientType = () => {
+  if (!newIngredientType.value.ingredientTypeName || newIngredientType.value.ingredientTypeName.length > 100) {
+    toast({
+      title: 'Lỗi',
+      description: 'Tên loại nguyên liệu không được để trống và phải nhỏ hơn 100 ký tự',
+    });
+    return false;
+  }
+  if (newIngredientType.value.ingredientTypeDescription && newIngredientType.value.ingredientTypeDescription.length > 1024) {
+    toast({
+      title: 'Lỗi',
+      description: 'Mô tả loại nguyên liệu phải nhỏ hơn 1024 ký tự',
+    });
+    return false;
+  }
+  return true;
+};
+
+
+
+const isDeleteDialogOpen = ref(false);
+const IDOfObjectAboutToBeDeleted = ref('');
+const openDeleteConfirmDialog = (objectID: string) => {
+  // console.log("tableID:", tableID);
+  IDOfObjectAboutToBeDeleted.value = objectID;
+  isDeleteDialogOpen.value = true;
+}
+
+const deleteIngredient = async () => {
+  await ingredientStore.deleteIngredient(IDOfObjectAboutToBeDeleted.value);
+  isDeleteDialogOpen.value = false
+}
+
+
+
 </script>
 
 <template>
@@ -187,7 +263,7 @@ watch([searchQuery], () => {
                 class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" @click="deleteIngredient(ingredient.id)"
+              <Button variant="ghost" size="icon" @click="openDeleteConfirmDialog(ingredient.id)"
                 class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
@@ -225,21 +301,21 @@ watch([searchQuery], () => {
     <Dialog v-model:open="isAddIngredientModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Ingredient</DialogTitle>
+          <DialogTitle>Thêm Nguyên Liệu Mới</DialogTitle>
           <DialogDescription>
-            Enter the details for the new ingredient.
+            Nhập các thông tin dưới đây để thêm nguyên liệu mới.
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="addIngredient" class="space-y-4">
           <div class="space-y-2">
-            <Label for="name">Name</Label>
+            <Label for="name">Tên nguyên liệu</Label>
             <Input id="name" v-model="newIngredient.ingredientName" required />
           </div>
           <div class="space-y-2">
-            <Label for="type">Type</Label>
+            <Label for="type">Loại Nguyên Liệu</Label>
             <Select v-model="newIngredient.ingredientTypeID" required>
               <SelectTrigger>
-                <SelectValue placeholder="Select an ingredient type" />
+                <SelectValue placeholder="Chọn Loại Nguyên Liệu" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem v-for="type in ingredientStore.ingredientTypes" :key="type.id" :value="type.id">
@@ -249,7 +325,7 @@ watch([searchQuery], () => {
             </Select>
           </div>
           <DialogFooter>
-            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Ingredient</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Thêm Nguyên Liệu</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -259,21 +335,21 @@ watch([searchQuery], () => {
     <Dialog v-model:open="isEditIngredientModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Ingredient</DialogTitle>
+          <DialogTitle>Sửa Nguyên Liệu</DialogTitle>
           <DialogDescription>
-            Make changes to the ingredient.
+            Sửa Nguyên Liệu
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="editIngredient" class="space-y-4">
           <div class="space-y-2">
-            <Label for="edit-name">Name</Label>
+            <Label for="edit-name">Tên nguyên liệu</Label>
             <Input id="edit-name" v-model="currentIngredient.ingredientName" required />
           </div>
           <div class="space-y-2">
-            <Label for="edit-type">Type</Label>
+            <Label for="edit-type">Loại Nguyên Liệu</Label>
             <Select v-model="currentIngredient.ingredientTypeID" required>
               <SelectTrigger>
-                <SelectValue placeholder="Select an ingredient type" />
+                <SelectValue placeholder="Chọn loại nguyên liệu" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem v-for="type in ingredientStore.ingredientTypes" :key="type.id" :value="type.id">
@@ -283,7 +359,7 @@ watch([searchQuery], () => {
             </Select>
           </div>
           <DialogFooter>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit">Lưu nguyên liệu</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -293,24 +369,41 @@ watch([searchQuery], () => {
     <Dialog v-model:open="isAddIngredientTypeModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Ingredient Type</DialogTitle>
+          <DialogTitle>Thêm Loại Nguyên Liệu</DialogTitle>
           <DialogDescription>
-            Enter the details for the new ingredient type.
+            Điền các thông tin dưới đây để thêm loại nguyên liệu
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="addIngredientType" class="space-y-4">
           <div class="space-y-2">
-            <Label for="type-name">Name</Label>
+            <Label for="type-name">Tên loại nguyên liệu</Label>
             <Input id="type-name" v-model="newIngredientType.ingredientTypeName" required />
           </div>
           <div class="space-y-2">
-            <Label for="type-description">Description</Label>
+            <Label for="type-description">Mô tả</Label>
             <Input id="type-description" v-model="newIngredientType.ingredientTypeDescription" required />
           </div>
           <DialogFooter>
-            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Ingredient Type</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Thêm Loại Nguyên Liệu</Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+
+
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xác nhận xóa nhà cung cấp này?</DialogTitle>
+          <DialogDescription>
+            Bạn có chắc chắn muốn xóa nhà cung cấp này không? Hành động này không thể hoàn tác trừ khi liên hệ với kỹ
+            thuật viên.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button @click="isDeleteDialogOpen = false"> Hủy </Button>
+          <Button @click="deleteIngredient" class="bg-red-400 hover:bg-red-500 text-white">Xóa</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   </div>

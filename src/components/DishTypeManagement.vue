@@ -31,8 +31,8 @@ function checkPermission() {
   console.log(authStore.userRole, requiredRoles);
   if (!hasPermission(authStore.userRole, requiredRoles)) {
     toast({
-      title: 'Forbidden',
-      description: 'You do not have permission to add, edit, or delete a dish type',
+      title: 'Bị cấm',
+      description: 'Tài khoản của bạn không thể thực hiện thao tác này',
     });
     return false;
   }
@@ -44,8 +44,15 @@ onMounted(() => {
 })
 
 const addDishType = async () => {
+  if (!validateDishType()) {
+    toast({
+      title: 'Không thêm được',
+      description: 'Hãy đảm bảo tên không vượt qua 100 ký tự và mô tả không vượt quá 1024 ký tự đồng thời tên không được bỏ trống',
+    });
+    return;
+  }
   if (!checkPermission()) return;
-  console.log('Adding dish type:', newDishType.value) // debug stuff, dont mind this line
+  // console.log('Adding dish type:', newDishType.value) // debug stuff, dont mind this line
   await dishTypeStore.addDishType(newDishType.value)
   isAddModalOpen.value = false
   newDishType.value = { DishTypeName: '', DishTypeDescription: '', DishTypeAvailable: true }
@@ -58,15 +65,19 @@ const openEditModal = (dishType: { id: string; DishTypeName: string; DishTypeDes
 }
 
 const editDishType = async () => {
+  if (!validateCurrentDishType) {
+    toast({
+      title: 'Không chỉnh sửa được',
+      description: 'Hãy đảm bảo tên không vượt qua 100 ký tự và mô tả không vượt quá 1024 ký tự đồng thời tên không được bỏ trống',
+    });
+    return false
+  };
   if (!checkPermission()) return;
   await dishTypeStore.updateDishType(currentDishType.value)
   isEditModalOpen.value = false
 }
 
-const deleteDishType = async (id: string) => {
-  if (!checkPermission()) return;
-  await dishTypeStore.deleteDishType(id)
-}
+
 const openAddDishTypeModal = () => {
   if (!checkPermission()) return;
   isAddModalOpen.value = true
@@ -118,6 +129,7 @@ const getSortIcon = (column: string) => {
 //I know, it's weird, but it work, so i'll leave it like that
 //lol
 const toggleAvailability = (isNewDishType: boolean) => {
+  openConfirmDialog();
   if (isNewDishType) {
     newDishType.value.DishTypeAvailable = !newDishType.value.DishTypeAvailable
   } else {
@@ -151,6 +163,46 @@ watch([searchQuery], () => {
   dishTypeStore.fetchDishTypes(1)
 })
 
+
+const validateDishType = () => {
+  if (!newDishType.value.DishTypeName || newDishType.value.DishTypeName.length > 100) {
+    return false;
+  }
+  if (newDishType.value.DishTypeDescription.length > 1024) {
+    return false;
+  }
+  return true;
+}
+const validateCurrentDishType = () => {
+  if (!currentDishType.value.DishTypeName || currentDishType.value.DishTypeName.length > 100) {
+    return false;
+  }
+  if (currentDishType.value.DishTypeDescription.length > 1024) {
+    return false;
+  }
+  return true;
+}
+
+const isConfirmDialogOpen = ref(false);
+const openConfirmDialog = () => {
+  isConfirmDialogOpen.value = true;
+}
+
+
+
+const isDeleteDialogOpen = ref(false);
+const dishTypeIDOfAboutToBeDeletedDish = ref('');
+const openDeleteConfirmDialog = (dishTypeID: string) => {
+  console.log("dishTypeID:", dishTypeID);
+  dishTypeIDOfAboutToBeDeletedDish.value = dishTypeID;
+  isDeleteDialogOpen.value = true;
+}
+
+const deleteDishType = async () => {
+  if (!checkPermission()) { return; }
+  await dishTypeStore.deleteDishType(dishTypeIDOfAboutToBeDeletedDish.value)
+  isDeleteDialogOpen.value = false;
+}
 
 </script>
 
@@ -235,7 +287,7 @@ watch([searchQuery], () => {
                 class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" @click="deleteDishType(dishType.id)"
+              <Button variant="ghost" size="icon" @click="openDeleteConfirmDialog(dishType.id)"
                 class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
@@ -272,29 +324,29 @@ watch([searchQuery], () => {
     <Dialog v-model:open="isAddModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Dish Type</DialogTitle>
+          <DialogTitle>Thêm loại món ăn</DialogTitle>
           <DialogDescription>
-            Enter the details for the new dish type.
+            Thêm loại món ăn bằng cách nhập các thông tin dưới đây
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="addDishType" class="space-y-4">
           <div class="space-y-2">
-            <Label for="name">Name</Label>
+            <Label for="name">Tên Loại Món Ăn</Label>
             <Input id="name" v-model="newDishType.DishTypeName" required />
           </div>
           <div class="space-y-2">
-            <Label for="description">Description</Label>
-            <Textarea id="description" v-model="newDishType.DishTypeDescription" required />
+            <Label for="description">Mô Tả</Label>
+            <Textarea id="description" v-model="newDishType.DishTypeDescription" />
           </div>
           <div class="flex items-center space-x-2">
             <!-- Instead of binding using v-model (Which, some fucking how, don't work!!), i bind it through checked -->
-            <Switch id="available" :checked="newDishType.DishTypeAvailable"
-              @update:checked="toggleAvailability(true)" />
-            <Label for="edit-available">Available</Label>
+            <Switch id="available" :checked="newDishType.DishTypeAvailable" @update:checked="toggleAvailability(true)"
+              :disabled="true" />
+            <Label for="edit-available">Còn phục vụ?</Label>
           </div>
 
           <DialogFooter>
-            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add Dish Type</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Thêm Loại Món</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -303,29 +355,61 @@ watch([searchQuery], () => {
     <Dialog v-model:open="isEditModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Dish Type</DialogTitle>
+          <DialogTitle>Chỉnh sửa loại món</DialogTitle>
           <DialogDescription>
-            Make changes to the dish type.
+            Chỉnh sửa loại món bằng cách nhập các thông tin dưới đây
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="editDishType" class="space-y-4">
           <div class="space-y-2">
-            <Label for="edit-name">Name</Label>
+            <Label for="edit-name">Tên Loại Món</Label>
             <Input id="edit-name" v-model="currentDishType.DishTypeName" required />
           </div>
           <div class="space-y-2">
-            <Label for="edit-description">Description</Label>
-            <Textarea id="edit-description" v-model="currentDishType.DishTypeDescription" required />
+            <Label for="edit-description">Mô Tả</Label>
+            <Textarea id="edit-description" v-model="currentDishType.DishTypeDescription" />
           </div>
           <div class="flex items-center space-x-2">
             <Switch id="edit-available" :checked="currentDishType.DishTypeAvailable"
               @update:checked="toggleAvailability(false)" />
-            <Label for="edit-available">Available</Label>
+            <Label for="edit-available">Còn Phục Vụ?</Label>
           </div>
           <DialogFooter>
-            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Save Changes</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Lưu thay đổi</Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xóa loại món ăn?</DialogTitle>
+          <DialogDescription>
+            Hãy thực sự chắc chắn rằng bạn đang muốn xóa loại món ăn này, xóa loại món ăn này đồng nghĩa với mọi món ăn
+            thuộc loại món ăn này sẽ bị xóa. Mọi thông tin bị xóa đều không thể trở lại trừ khi
+            liên hệ với một kỹ thuật viên. Bạn có chắc chắn muốn xóa loại món ăn này?
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button @click="isDeleteDialogOpen = false"> Hủy </Button>
+          <Button @click="deleteDishType" class="bg-red-400 hover:bg-red-500 text-white">Xóa</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog v-model:open="isConfirmDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xác nhận thay đổi trạng thái cho toàn bộ món ăn thuộc loại món này?</DialogTitle>
+          <DialogDescription>
+            Bạn có chắc chắn muốn thay đổi trạng thái cho toàn bộ món ăn thuộc loại món này? Nếu không, hãy tắt dialog
+            chỉnh sửa và đừng bấm "Lưu"
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button @click="isConfirmDialogOpen = false"> Tắt </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   </div>

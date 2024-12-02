@@ -129,8 +129,8 @@ function checkPermission() {
   console.log(authStore.userRole, requiredRoles);
   if (!hasPermission(authStore.userRole, requiredRoles)) {
     toast({
-      title: 'Forbidden',
-      description: 'You do not have permission to add, edit, or delete an',
+      title: 'Bị cấm',
+      description: 'Tài khoản của bạn không thể thực hiện thao tác này',
     });
     return false;
   }
