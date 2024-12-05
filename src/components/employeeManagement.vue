@@ -64,9 +64,7 @@ const editEmployee = async () => {
   isEditEmployeeModalOpen.value = false
 }
 
-const deleteEmployee = async (id: string) => {
-  await employeeStore.deleteEmployee(id)
-}
+
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -107,6 +105,27 @@ watch(newEmployee, (newVal) => {
 const handleChange = () => {
   newEmployee.value.createAccount = !newEmployee.value.createAccount
 }
+
+
+
+const isDeleteDialogOpen = ref(false);
+const IDOfObjectAboutToBeDeleted = ref('');
+const openDeleteConfirmDialog = (objectID: string) => {
+  // console.log("tableID:", tableID);
+  IDOfObjectAboutToBeDeleted.value = objectID;
+  isDeleteDialogOpen.value = true;
+}
+
+// const deletePosition = async () => {
+//   await employeeStore.deleteEmployee(IDOfObjectAboutToBeDeleted.value);
+//   isDeleteDialogOpen.value = false;
+// }
+const deleteEmployee = async () => {
+  await employeeStore.deleteEmployee(IDOfObjectAboutToBeDeleted.value);
+  isDeleteDialogOpen.value = false
+}
+
+
 </script>
 
 <template>
@@ -146,7 +165,7 @@ const handleChange = () => {
                 class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" @click="deleteEmployee(employee.id)"
+              <Button variant="ghost" size="icon" @click="openDeleteConfirmDialog(employee.id)"
                 class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
@@ -298,9 +317,7 @@ const handleChange = () => {
             </Select>
           </div>
           <div class="space-y-2">
-            <Label for="edit-dob">Ngày Sinh</Label>
-            <Input id="edit-dob" type="date"
-              :value="new Date(currentEmployee.employeeDateOfBirth).toISOString().substr(0, 10)"
+            <Input id="edit-dob" type="date" :value="currentEmployee.employeeDateOfBirth.split('T')[0]"
               @input="currentEmployee.employeeDateOfBirth = $event.target.value" required />
           </div>
           <div class="space-y-2">
@@ -318,7 +335,7 @@ const handleChange = () => {
           </div>
           <div class="space-y-2">
             <Label for="edit-position">Chức Vụ</Label>
-            <Select v-model="currentEmployee.work" required>
+            <Select v-model="currentEmployee.Work.Position.positionDescription" required>
               <SelectTrigger>
                 <SelectValue placeholder="Select a position" />
               </SelectTrigger>
@@ -397,6 +414,23 @@ const handleChange = () => {
         </div>
         <DialogFooter>
           <Button @click="isAccountCreatedModalOpen = false" class="hover:bg-red-600">Đóng</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xác nhận xóa nhân viên này?</DialogTitle>
+          <DialogDescription>
+            Bạn có chắc chắn muốn xóa nhân viên này. Hành động này không thể hoàn tác trừ
+            khi liên hệ với kỹ
+            thuật viên.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button @click="isDeleteDialogOpen = false"> Hủy </Button>
+          <Button @click="deleteEmployee" class="bg-red-400 hover:bg-red-500 text-white">Xóa</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

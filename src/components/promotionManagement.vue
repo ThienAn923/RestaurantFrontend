@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { usePromotionStore } from './pinia/promotion.store'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { UtensilsCrossed } from 'lucide-vue-next'
 
 import { useAuthStore } from './pinia/auth'
 import { hasPermission, ROLES } from './utils/permission'
@@ -32,6 +35,29 @@ onMounted(async () => {
   await promotionStore.fetchPromotions(1)
   await promotionStore.fetchDishes()
 })
+
+const formatDate = (date: string) => {
+  return new Date(date).toLocaleDateString('vi-VN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(amount)
+}
+
+const getBadgeVariant = (type: string) => {
+  switch (type) {
+    case 'invoice': return 'default'
+    case 'dish': return 'secondary'
+    default: return 'outline'
+  }
+}
 
 function checkPermission() {
   const requiredRoles = [ROLES.ADMIN]; // Define the roles required to add a dish type
@@ -86,10 +112,7 @@ const editPromotion = async () => {
   isEditPromotionModalOpen.value = false
 }
 
-const deletePromotion = async (id: string) => {
-  if (!checkPermission()) return;
-  await promotionStore.deletePromotion(id)
-}
+
 
 const pageNumbers = computed(() => {
   const totalPages = promotionStore.totalPages
@@ -151,6 +174,21 @@ const toVietnamese = (type: string) => {
       return 'Khác'
   }
 }
+
+const isDeleteDialogOpen = ref(false);
+const IDOfObjectAboutToBeDeleted = ref('');
+const openDeleteConfirmDialog = (objectID: string) => {
+  // console.log("tableID:", tableID);
+  IDOfObjectAboutToBeDeleted.value = objectID;
+  isDeleteDialogOpen.value = true;
+}
+
+const deletePromotion = async () => {
+  if (!checkPermission()) return;
+  await promotionStore.deletePromotion(IDOfObjectAboutToBeDeleted.value);
+  isDeleteDialogOpen.value = false;
+}
+
 </script>
 
 <template>
@@ -216,7 +254,7 @@ const toVietnamese = (type: string) => {
                 class="text-blue-500 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" @click="deletePromotion(promotion.id)"
+              <Button variant="ghost" size="icon" @click="openDeleteConfirmDialog(promotion.id)"
                 class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
@@ -389,48 +427,91 @@ const toVietnamese = (type: string) => {
 
     <!-- Promotion Info Modal -->
     <Dialog v-model:open="isInfoModalOpen">
-      <DialogContent>
+      <DialogContent class="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Thông Tin Khuyến Mãi</DialogTitle>
+          <DialogTitle class="text-2xl font-bold">{{ currentPromotion.promotionName }}</DialogTitle>
+          <DialogDescription>{{ currentPromotion.promotionDescription || 'No description available' }}
+          </DialogDescription>
         </DialogHeader>
-        <div class="space-y-4">
-          <div>
-            <Label class="font-bold">Tên Khuyến Mãi:</Label>
-            <p>{{ currentPromotion.promotionName }}</p>
+        <div class="mt-6 space-y-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="text-sm text-gray-500">Tỷ Lệ Giảm Giá</p>
+              <p class="text-3xl font-bold text-green-600">{{ currentPromotion.discount }}%</p>
+            </div>
+            <Badge class="text-lg px-3 py-1" :variant="getBadgeVariant(currentPromotion.promotionType.type)">
+              {{ toVietnamese(currentPromotion.promotionType.type) }}
+            </Badge>
           </div>
-          <div>
-            <Label class="font-bold">Mô Tả:</Label>
-            <p>{{ currentPromotion.promotionDescription || 'N/A' }}</p>
+
+          <Separator />
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <Label class="text-sm text-gray-500">Ngày Bắt Đầu</Label>
+              <p class="font-medium">{{ formatDate(currentPromotion.startDate) }}</p>
+            </div>
+            <div>
+              <Label class="text-sm text-gray-500">Ngày Kết Thúc</Label>
+              <p class="font-medium">{{ formatDate(currentPromotion.endDate) }}</p>
+            </div>
           </div>
-          <div>
-            <Label class="font-bold">Tỷ Lệ Giảm Giá:</Label>
-            <p>{{ currentPromotion.discount }}%</p>
-          </div>
-          <div>
-            <Label class="font-bold">Ngày Bắt Đầu:</Label>
-            <p>{{ new Date(currentPromotion.startDate).toLocaleString() }}</p>
-          </div>
-          <div>
-            <Label class="font-bold">Ngày Kết Thúc:</Label>
-            <p>{{ new Date(currentPromotion.endDate).toLocaleString() }}</p>
-          </div>
-          <div>
-            <Label class="font-bold">Loại Khuyến Mãi:</Label>
-            <p>{{ toVietnamese(currentPromotion.promotionType.type) }}</p>
-          </div>
+
+          <Separator />
+
           <div v-if="currentPromotion.promotionType.type === 'invoice'">
-            <Label class="font-bold">Minimum Spend:</Label>
-            <p>{{ currentPromotion.promotionType.details.minimumSpend ?
-              `${currentPromotion.promotionType.details.minimumSpend.toLocaleString()} VND` : 'N/A' }}</p>
+            <h3 class="text-lg font-semibold mb-2">Chi tiết hóa đơn</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <Label class="text-sm text-gray-500">Chi tiêu thấp nhất để được áp dụng</Label>
+                <p class="font-medium">{{ formatCurrency(currentPromotion.promotionType.details.minimumSpend) }}</p>
+              </div>
+              <div>
+                <Label class="text-sm text-gray-500">Giới hạn số tiền khuyến mãi</Label>
+                <p class="font-medium">
+                  {{ currentPromotion.promotionType.details.promotionLimit
+                    ? formatCurrency(currentPromotion.promotionType.details.promotionLimit)
+                    : 'Unlimited' }}
+                </p>
+              </div>
+            </div>
           </div>
-          <div v-if="currentPromotion.promotionType.type === 'invoice'">
-            <Label class="font-bold">Promotion Limit:</Label>
-            <p>{{ currentPromotion.promotionType.details.promotionLimit ?
-              `${currentPromotion.promotionType.details.promotionLimit.toLocaleString()} VND` : 'Unlimited' }}</p>
+
+          <div v-if="currentPromotion.promotionType.type === 'dish'">
+            <h3 class="text-lg font-semibold mb-2">Món Ăn Áp Dụng</h3>
+            <ScrollArea class="h-[200px] w-full rounded-md border">
+              <div class="p-4">
+                <ul class="grid grid-cols-2 gap-2">
+                  <li v-for="dish in currentPromotion.promotionType.details.dishes" :key="dish"
+                    class="flex items-center space-x-2 bg-gray-100 rounded-md p-2">
+                    <UtensilsCrossed class="h-4 w-4 text-gray-500" />
+                    <span class="text-sm">{{ dish.name }}</span>
+                  </li>
+                </ul>
+              </div>
+            </ScrollArea>
           </div>
         </div>
         <DialogFooter>
-          <Button @click="isInfoModalOpen = false" class="bg-blue-500 hover:bg-blue-600 text-white">Close</Button>
+          <Button @click="isInfoModalOpen = false" variant="outline">Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xác nhận xóa khuyến mãi này?</DialogTitle>
+          <DialogDescription>
+            Bạn có chắc chắn muốn xóa khuyến mãi này. Hành động này không thể hoàn tác trừ
+            khi liên hệ với kỹ
+            thuật viên.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button @click="isDeleteDialogOpen = false"> Hủy </Button>
+          <Button @click="deletePromotion" class="bg-red-400 hover:bg-red-500 text-white">Xóa</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

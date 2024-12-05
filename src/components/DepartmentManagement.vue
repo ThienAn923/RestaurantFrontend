@@ -91,9 +91,78 @@ const editDepartment = async () => {
   }
 }
 
-const deleteDepartment = async (id: string) => {
+
+
+const pageNumbers = computed(() => {
+  const totalPages = departmentStore.totalPages
+  const currentPage = departmentStore.currentPage
+  const pages = []
+
+  if (totalPages <= 4) {
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i)
+    }
+  } else {
+    if (currentPage <= 3) {
+      pages.push(1, 2, 3, 4, '...', totalPages)
+    } else if (currentPage >= totalPages - 2) {
+      pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages)
+    } else {
+      pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages)
+    }
+  }
+
+  return pages
+})
+
+
+const goToPage = (page: number) => {
+  departmentStore.fetchDepartments(page)
+}
+
+const sortTable = (column: string) => {
+  if (sortColumn.value === column) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortColumn.value = column
+    sortOrder.value = 'asc'
+  }
+  departmentStore.setSorting(sortColumn.value, sortOrder.value)
+  departmentStore.fetchDepartments(1)
+}
+
+const getSortIcon = (column: string) => {
+  if (sortColumn.value !== column) return null
+  return sortOrder.value === 'asc' ? ChevronUpIcon : ChevronDownIcon
+}
+
+const searchQuery = ref('')
+
+const resetFilters = () => {
+  searchQuery.value = ''
+}
+
+watch([searchQuery], () => {
+  // alert(searchQuery.value)
+  departmentStore.setSearch(searchQuery.value);
+  departmentStore.fetchDepartments(1)
+})
+
+
+const isDeleteDialogOpen = ref(false);
+const IDOfObjectAboutToBeDeleted = ref('');
+const openDeleteConfirmDialog = (objectID: string) => {
+  // console.log("tableID:", tableID);
+  IDOfObjectAboutToBeDeleted.value = objectID;
+  isDeleteDialogOpen.value = true;
+}
+
+const deleteDepartment = async () => {
   try {
-    await departmentStore.deleteDepartment(id)
+    await departmentStore.deleteDepartment(IDOfObjectAboutToBeDeleted.value);
+    isDeleteDialogOpen.value = false;
+    isDeleteDialogOpen.value = false;
+
   } catch (error) {
     toast({
       title: 'Lỗi',
@@ -101,60 +170,9 @@ const deleteDepartment = async (id: string) => {
     });
 
   }
+}
 
-  const pageNumbers = computed(() => {
-    const totalPages = departmentStore.totalPages
-    const currentPage = departmentStore.currentPage
-    const pages = []
 
-    if (totalPages <= 4) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i)
-      }
-    } else {
-      if (currentPage <= 3) {
-        pages.push(1, 2, 3, 4, '...', totalPages)
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages)
-      } else {
-        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages)
-      }
-    }
-
-    return pages
-  })
-
-  const goToPage = (page: number) => {
-    departmentStore.fetchDepartments(page)
-  }
-
-  const sortTable = (column: string) => {
-    if (sortColumn.value === column) {
-      sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
-    } else {
-      sortColumn.value = column
-      sortOrder.value = 'asc'
-    }
-    departmentStore.setSorting(sortColumn.value, sortOrder.value)
-    departmentStore.fetchDepartments(1)
-  }
-
-  const getSortIcon = (column: string) => {
-    if (sortColumn.value !== column) return null
-    return sortOrder.value === 'asc' ? ChevronUpIcon : ChevronDownIcon
-  }
-
-  const searchQuery = ref('')
-
-  const resetFilters = () => {
-    searchQuery.value = ''
-  }
-
-  watch([searchQuery], () => {
-    // alert(searchQuery.value)
-    departmentStore.setSearch(searchQuery.value);
-    departmentStore.fetchDepartments(1)
-  })
 
 
 </script>
@@ -230,7 +248,7 @@ const deleteDepartment = async (id: string) => {
                 class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" @click="deleteDepartment(department.id)"
+              <Button variant="ghost" size="icon" @click="openDeleteConfirmDialog(department.id)"
                 class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
@@ -297,25 +315,25 @@ const deleteDepartment = async (id: string) => {
     <Dialog v-model:open="isAddModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Department</DialogTitle>
+          <DialogTitle>Thêm Bộ Phận Mới</DialogTitle>
           <DialogDescription>
-            Enter the details for the new department.
+            Nhập thông tin cho bộ phận mới dưới đây.
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="addDepartment" class="space-y-4">
           <div class="space-y-2">
-            <Label for="name">Name</Label>
+            <Label for="name">Tên Bộ Phận </Label>
             <Input id="name" v-model="newDepartment.departmentName" required />
           </div>
           <div class="space-y-2">
-            <Label for="description">Description</Label>
+            <Label for="description">Mô Tả</Label>
             <Textarea id="description" v-model="newDepartment.departmentDescription" />
           </div>
           <div class="space-y-2">
-            <Label for="headOfDepartment">Head of Department</Label>
+            <Label for="headOfDepartment">Trưởng Bộ Phận</Label>
             <Select v-model="newDepartment.headOfDepartment">
               <SelectTrigger>
-                <SelectValue placeholder="Select head of department" />
+                <SelectValue placeholder="Chọn Trưởng Bộ Phận" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem v-for="employee in employeeStore.employees" :key="employee.id" :value="employee.id">
@@ -325,7 +343,7 @@ const deleteDepartment = async (id: string) => {
             </Select>
           </div>
           <DialogFooter>
-            <Button type="submit">Add Department</Button>
+            <Button type="submit">Thêm Bộ Phận</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -335,18 +353,18 @@ const deleteDepartment = async (id: string) => {
     <Dialog v-model:open="isEditModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Department</DialogTitle>
+          <DialogTitle>Chỉnh Sửa Bộ Phận</DialogTitle>
           <DialogDescription>
-            Make changes to the department.
+            Nhập thông tin muốn chỉnh sửa cho bộ phận dưới đây.
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="editDepartment" class="space-y-4">
           <div class="space-y-2">
-            <Label for="edit-name">Name</Label>
+            <Label for="edit-name">Tên Bộ Phận</Label>
             <Input id="edit-name" v-model="currentDepartment.departmentName" required />
           </div>
           <div class="space-y-2">
-            <Label for="edit-description">Description</Label>
+            <Label for="edit-description">Mô Tả</Label>
             <Textarea id="edit-description" v-model="currentDepartment.departmentDescription" />
           </div>
           <div class="space-y-2">
@@ -363,7 +381,7 @@ const deleteDepartment = async (id: string) => {
             </Select>
           </div>
           <DialogFooter>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit">Lưu Thay Đổi </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -373,36 +391,70 @@ const deleteDepartment = async (id: string) => {
     <Dialog v-model:open="isInfoModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Department Information</DialogTitle>
+          <DialogTitle>Thông Tin Bộ Phận</DialogTitle>
         </DialogHeader>
         <div class="space-y-4">
           <div>
-            <Label class="font-bold">Name:</Label>
+            <Label class="font-bold">Tên Bộ Phận:</Label>
             <p>{{ currentDepartment.departmentName }}</p>
           </div>
           <div>
-            <Label class="font-bold">Description:</Label>
+            <Label class="font-bold">Mô Tả:</Label>
             <p>{{ currentDepartment.departmentDescription || 'N/A' }}</p>
           </div>
           <div>
-            <Label class="font-bold">Total Employees:</Label>
+            <Label class="font-bold">Tổng Số Nhân Viên:</Label>
             <p>{{ currentDepartment.totalEmployee }}</p>
           </div>
           <div>
-            <Label class="font-bold">Head of Department:</Label>
+            <Label class="font-bold">Trưởng Bộ Phận:</Label>
             <p>{{ currentDepartment.headOfDepartment.name || 'N/A' }}</p>
           </div>
           <div>
-            <Label class="font-bold">Created At:</Label>
+            <Label class="font-bold">Ngày Tạo:</Label>
             <p>{{ new Date(currentDepartment.createAt).toLocaleString() }}</p>
           </div>
           <div>
-            <Label class="font-bold">Updated At:</Label>
+            <Label class="font-bold">Ngày Cập Nhật:</Label>
             <p>{{ new Date(currentDepartment.updateAt).toLocaleString() }}</p>
           </div>
         </div>
         <DialogFooter>
-          <Button @click="isInfoModalOpen = false">Close</Button>
+          <Button @click="isInfoModalOpen = false">Đóng</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xác nhận xóa phong ban này?</DialogTitle>
+          <DialogDescription>
+            Bạn có chắc chắn muốn xóa phòng ban này. Hành động này không thể hoàn tác trừ
+            khi liên hệ với kỹ
+            thuật viên.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button @click="isDeleteDialogOpen = false"> Hủy </Button>
+          <Button @click="deleteDepartment" class="bg-red-400 hover:bg-red-500 text-white">Xóa</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xác nhận xóa bộ phận này?</DialogTitle>
+          <DialogDescription>
+            Bạn có chắc chắn muốn xóa bộ phận này. Hành động này không thể hoàn tác trừ
+            khi liên hệ với kỹ thuật viên.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button @click="isDeleteDialogOpen = false"> Hủy </Button>
+          <Button @click="deleteDepartment" class="bg-red-400 hover:bg-red-500 text-white">Xóa</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

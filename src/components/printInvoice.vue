@@ -71,7 +71,7 @@ const printInvoice = () => {
 
 
 <template>
-    <div class="print-invoice w-[210mm] mx-auto bg-white p-10">
+    <div class="print-invoice w-[80mm] mx-auto bg-white p-10">
         <div class="max-w-3xl mx-auto">
             <div class="flex items-center justify-between mb-8">
                 <div class="flex items-center">

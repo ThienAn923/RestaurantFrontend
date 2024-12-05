@@ -263,7 +263,7 @@ const openDialog = async (id: string) => {
         <Dialog v-model:open="isDialogOpen">
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Department Information</DialogTitle>
+                    <DialogTitle>Khóa tài khoản khách hàng</DialogTitle>
                 </DialogHeader>
                 <div class="space-y-4">
                     <div>

@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { usePositionStore } from './pinia/position.store'
 import { useEmployeeStore } from './pinia/employee.store'
+import { useToast } from "./ui/toast"
+const { toast } = useToast();
 
 const positionStore = usePositionStore()
 const employeeStore = useEmployeeStore()
@@ -39,6 +41,7 @@ onMounted(async () => {
 })
 
 const addPosition = async () => {
+  if (!validateNewPosition()) return
   await positionStore.addPosition(newPosition.value)
   isAddModalOpen.value = false
   newPosition.value = {
@@ -58,13 +61,11 @@ const openInfoModal = (position: typeof currentPosition.value) => {
 }
 
 const editPosition = async () => {
+  if (!validateCurrentPosition()) return
   await positionStore.updatePosition(currentPosition.value)
   isEditModalOpen.value = false
 }
 
-const deletePosition = async (id: string) => {
-  await positionStore.deletePosition(id)
-}
 
 const pageNumbers = computed(() => {
   const totalPages = positionStore.totalPages
@@ -119,6 +120,60 @@ watch([searchQuery], () => {
   positionStore.setSearch(searchQuery.value);
   positionStore.fetchPositions(1)
 })
+
+
+const isDeleteDialogOpen = ref(false);
+const IDOfObjectAboutToBeDeleted = ref('');
+const openDeleteConfirmDialog = (objectID: string) => {
+  // console.log("tableID:", tableID);
+  IDOfObjectAboutToBeDeleted.value = objectID;
+  isDeleteDialogOpen.value = true;
+}
+
+const deletePosition = async () => {
+  await positionStore.deletePosition(IDOfObjectAboutToBeDeleted.value);
+  isDeleteDialogOpen.value = false;
+}
+
+
+const validateNewPosition = () => {
+  if (!newPosition.value.positionName || newPosition.value.positionName.length > 100) {
+    toast({
+      title: 'Lỗi',
+      description: 'Tên chức vụ phải nhỏ hơn 100 ký tự và không được để trống',
+    })
+    return false
+  }
+  if (newPosition.value.positionDescription.length > 1024) {
+    toast({
+      title: 'Lỗi',
+      description: 'Mô tả chức vụ phải nhỏ hơn 1024 ký tự',
+    })
+    return false
+  }
+  return true
+}
+
+const validateCurrentPosition = () => {
+  if (!currentPosition.value.positionName || currentPosition.value.positionName.length > 100) {
+    toast({
+      title: 'Lỗi',
+      description: 'Tên chức vụ phải nhỏ hơn 100 ký tự và không được để trống',
+    })
+    return false
+  }
+  if (currentPosition.value.positionDescription.length > 1024) {
+    toast({
+      title: 'Lỗi',
+      description: 'Mô tả chức vụ phải nhỏ hơn 1024 ký tự',
+    })
+    return false
+  }
+  return true
+}
+
+
+
 
 </script>
 
@@ -181,7 +236,7 @@ watch([searchQuery], () => {
                 class="text-blue-500 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" @click="deletePosition(position.id)"
+              <Button variant="ghost" size="icon" @click="openDeleteConfirmDialog(position.id)"
                 class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
@@ -219,22 +274,22 @@ watch([searchQuery], () => {
     <Dialog v-model:open="isAddModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Position</DialogTitle>
+          <DialogTitle>Thêm Chức Vụ</DialogTitle>
           <DialogDescription>
-            Enter the details for the new position.
+            Nhập thông tin chức vụ dưới đây để thêm chức vụ mới
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="addPosition" class="space-y-4">
           <div class="space-y-2">
-            <Label for="name">Name</Label>
+            <Label for="name">Tên Chức Vụ</Label>
             <Input id="name" v-model="newPosition.positionName" required />
           </div>
           <div class="space-y-2">
-            <Label for="description">Description</Label>
+            <Label for="description">Mô Tả</Label>
             <Textarea id="description" v-model="newPosition.positionDescription" />
           </div>
           <DialogFooter>
-            <Button type="submit">Add Position</Button>
+            <Button type="submit">Thêm Chức Vụ</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -244,22 +299,22 @@ watch([searchQuery], () => {
     <Dialog v-model:open="isEditModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Position</DialogTitle>
+          <DialogTitle>Chỉnh Sửa Chức Vụ</DialogTitle>
           <DialogDescription>
-            Make changes to the position.
+            Thay đổi thông tin cho chức vụ dưới đây
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="editPosition" class="space-y-4">
           <div class="space-y-2">
-            <Label for="edit-name">Name</Label>
+            <Label for="edit-name">Tên Chức Vụ</Label>
             <Input id="edit-name" v-model="currentPosition.positionName" required />
           </div>
           <div class="space-y-2">
-            <Label for="edit-description">Description</Label>
+            <Label for="edit-description">Mô Tả:</Label>
             <Textarea id="edit-description" v-model="currentPosition.positionDescription" />
           </div>
           <DialogFooter>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit">Lưu Chức Vụ</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -269,32 +324,50 @@ watch([searchQuery], () => {
     <Dialog v-model:open="isInfoModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Position Information</DialogTitle>
+          <DialogTitle>Thông tin chức vụ</DialogTitle>
         </DialogHeader>
         <div class="space-y-4">
           <div>
-            <Label class="font-bold">Name:</Label>
+            <Label class="font-bold">Tên Chức Vụ:</Label>
             <p>{{ currentPosition.positionName }}</p>
           </div>
           <div>
-            <Label class="font-bold">Description:</Label>
+            <Label class="font-bold">Mô Tả:</Label>
             <p>{{ currentPosition.positionDescription || 'N/A' }}</p>
           </div>
           <div>
-            <Label class="font-bold">Total Employees:</Label>
+            <Label class="font-bold">Tổng Số Nhân Viên:</Label>
             <p>{{ currentPosition.totalEmployee }}</p>
           </div>
           <div>
-            <Label class="font-bold">Created At:</Label>
+            <Label class="font-bold"> Ngày Tạo:</Label>
             <p>{{ new Date(currentPosition.createAt).toLocaleString() }}</p>
           </div>
           <div>
-            <Label class="font-bold">Updated At:</Label>
+            <Label class="font-bold"> Ngày Cập Nhật:</Label>
             <p>{{ new Date(currentPosition.updateAt).toLocaleString() }}</p>
           </div>
         </div>
         <DialogFooter>
-          <Button @click="isInfoModalOpen = false">Close</Button>
+          <Button @click="isInfoModalOpen = false">Đóng</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xác nhận xóa chức vụ này?</DialogTitle>
+          <DialogDescription>
+            Bạn có chắc chắn muốn xóa chức vụ này. Hành động này không thể hoàn tác trừ
+            khi liên hệ với kỹ
+            thuật viên.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button @click="isDeleteDialogOpen = false"> Hủy </Button>
+          <Button @click="deletePosition" class="bg-red-400 hover:bg-red-500 text-white">Xóa</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

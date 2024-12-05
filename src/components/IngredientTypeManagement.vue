@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useIngredientTypeStore } from './pinia/ingredientType.store'
+import { useToast } from "./ui/toast"
+const { toast } = useToast();
 
 const IngredientTypeStore = useIngredientTypeStore()
 
@@ -24,6 +26,7 @@ onMounted(() => {
 })
 
 const addIngredientType = async () => {
+  if (!validateNewIngredientType()) return;
   await IngredientTypeStore.addIngredientType(newIngredientType.value)
   isAddModalOpen.value = false
   newIngredientType.value = { ingredientTypeName: '', ingredientTypeDescription: '' }
@@ -35,13 +38,11 @@ const openEditModal = (ingredientType: { id: string; ingredientTypeName: string;
 }
 
 const editIngredientType = async () => {
+  if (!validateEditIngredientType()) return;
   await IngredientTypeStore.updateIngredientType(currentIngredientType.value)
   isEditModalOpen.value = false
 }
 
-const deleteIngredientType = async (id: string) => {
-  await IngredientTypeStore.deleteIngredientType(id)
-}
 
 const pageNumbers = computed(() => {
   const totalPages = IngredientTypeStore.totalPages
@@ -94,6 +95,62 @@ watch([searchQuery], () => {
 const goToPage = (page: number) => {
   IngredientTypeStore.fetchIngredientTypes(page)
 }
+
+
+
+const isDeleteDialogOpen = ref(false);
+const IDOfObjectAboutToBeDeleted = ref('');
+const openDeleteConfirmDialog = (objectID: string) => {
+  // console.log("tableID:", tableID);
+  IDOfObjectAboutToBeDeleted.value = objectID;
+  isDeleteDialogOpen.value = true;
+}
+
+const deleteIngredientType = async () => {
+  await IngredientTypeStore.deleteIngredientType(IDOfObjectAboutToBeDeleted.value);
+  isDeleteDialogOpen.value = false;
+}
+
+
+const validateNewIngredientType = () => {
+  if (!newIngredientType.value.ingredientTypeName || newIngredientType.value.ingredientTypeName.length > 100) {
+    toast({
+      title: 'Lỗi',
+      description: 'Tên loại nguyên liệu không được để trống và phải nhỏ hơn 100 ký tự',
+    });
+    return false;
+  }
+  if (newIngredientType.value.ingredientTypeDescription && newIngredientType.value.ingredientTypeDescription.length > 1024) {
+    toast({
+      title: 'Lỗi',
+      description: 'Mô tả loại nguyên liệu phải nhỏ hơn 1024 ký tự',
+    });
+    return false;
+  }
+  return true;
+};
+
+const validateEditIngredientType = () => {
+  if (!currentIngredientType.value.ingredientTypeName || currentIngredientType.value.ingredientTypeName.length > 100) {
+    toast({
+      title: 'Lỗi',
+      description: 'Tên loại nguyên liệu không được để trống và phải nhỏ hơn 100 ký tự',
+    });
+    return false;
+  }
+  if (currentIngredientType.value.ingredientTypeDescription && currentIngredientType.value.ingredientTypeDescription.length > 1024) {
+    toast({
+      title: 'Lỗi',
+      description: 'Mô tả loại nguyên liệu phải nhỏ hơn 1024 ký tự',
+    })
+    return false;
+  }
+  return true;
+}
+
+
+
+
 </script>
 
 <template>
@@ -151,7 +208,7 @@ const goToPage = (page: number) => {
                 class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
                 <PencilIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" @click="deleteIngredientType(ingredientType.id)"
+              <Button variant="ghost" size="icon" @click="openDeleteConfirmDialog(ingredientType.id)"
                 class="text-red-500 hover:text-white hover:bg-red-500">
                 <Trash2Icon class="h-4 w-4" />
               </Button>
@@ -188,22 +245,22 @@ const goToPage = (page: number) => {
     <Dialog v-model:open="isAddModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New IngredientType</DialogTitle>
+          <DialogTitle>Thêm Loại Nguyên Liệu</DialogTitle>
           <DialogDescription>
-            Enter the details for the new ingredientType.
+            Điển các thông tin dưới đây để thêm loại nguyên liệu mới.
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="addIngredientType" class="space-y-4">
           <div class="space-y-2">
-            <Label for="name">Name</Label>
+            <Label for="name">Tên Loại Nguyên Liệu</Label>
             <Input id="name" v-model="newIngredientType.ingredientTypeName" required />
           </div>
           <div class="space-y-2">
-            <Label for="description">Description</Label>
-            <Textarea id="description" v-model="newIngredientType.ingredientTypeDescription" required />
+            <Label for="description">Mô Tả</Label>
+            <Textarea id="description" v-model="newIngredientType.ingredientTypeDescription" />
           </div>
           <DialogFooter>
-            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Add IngredientType</Button>
+            <Button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white">Thêm Loại Nguyên Liệu</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -212,24 +269,43 @@ const goToPage = (page: number) => {
     <Dialog v-model:open="isEditModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit IngredientType</DialogTitle>
+          <DialogTitle>Chỉnh sửa Loại nguyên liệu</DialogTitle>
           <DialogDescription>
-            Make changes to the ingredientType.
+            Thay đổi tên hoặc mô tả của loại nguyên liệu này.
           </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="editIngredientType" class="space-y-4">
           <div class="space-y-2">
-            <Label for="edit-name">Name</Label>
+            <Label for="edit-name">Tên loại nguyên liệu</Label>
             <Input id="edit-name" v-model="currentIngredientType.ingredientTypeName" required />
           </div>
           <div class="space-y-2">
-            <Label for="edit-description">Description</Label>
-            <Textarea id="edit-description" v-model="currentIngredientType.ingredientTypeDescription" required />
+            <Label for="edit-description">Mô tả</Label>
+            <Textarea id="edit-description" v-model="currentIngredientType.ingredientTypeDescription" />
           </div>
           <DialogFooter>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit">Lưu Thay Đổi</Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+
+
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xác nhận xóa loại nguyên liệu này?</DialogTitle>
+          <DialogDescription>
+            Bạn có chắc chắn muốn xóa nhà cung cấp này không? Xóa loại nguyên liệu này sẽ không ảnh hưởng đến các hóa
+            đơn nhập xuất nhưng sẽ xóa các nguyên liệu thuộc loại nguyên liệu này. Hành động này không thể hoàn tác trừ
+            khi liên hệ với kỹ
+            thuật viên.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button @click="isDeleteDialogOpen = false"> Hủy </Button>
+          <Button @click="deleteIngredientType" class="bg-red-400 hover:bg-red-500 text-white">Xóa</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   </div>

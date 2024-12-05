@@ -417,7 +417,7 @@ const removeItem = (id: String) => {
               <div class="flex items-center space-x-4 mb-6">
                 <Select v-model="selectedTable" class="w-full">
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a table" />
+                    <SelectValue placeholder="Chọn Bàn" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem v-for="table in tables" :key="table.id" :value="table.id">
@@ -430,9 +430,9 @@ const removeItem = (id: String) => {
               </div>
 
               <div class="grid grid-cols-[2fr_60px_60px] gap-4 mb-4">
-                <div class="text-sm font-medium">Item</div>
-                <div class="text-sm font-medium text-center">Qty</div>
-                <div class="text-sm font-medium text-right">Price</div>
+                <div class="text-sm font-medium">Món</div>
+                <div class="text-sm font-medium text-center">SL</div>
+                <div class="text-sm font-medium text-right">Giá</div>
               </div>
 
               <ScrollArea class="h-[400px] -mr-6 pr-6">
@@ -469,7 +469,7 @@ const removeItem = (id: String) => {
               </ScrollArea>
 
               <div class="mt-6">
-                <Textarea v-model="orderNote" placeholder="Order note..." class="min-h-[100px] border-gray-200" />
+                <Textarea v-model="orderNote" placeholder="Ghi chú..." class="min-h-[100px] border-gray-200" />
               </div>
 
               <div class="mt-6 space-y-2">

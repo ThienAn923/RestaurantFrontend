@@ -226,13 +226,6 @@ watch([searchQuery], () => {
                 class="text-gray-600 hover:text-blue-600 hover:bg-blue-100">
                 <InfoIcon class="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
-                <PencilIcon class="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" @click="deleteImportInvoice(invoice.id)"
-                class="text-red-500 hover:text-white hover:bg-red-500">
-                <Trash2Icon class="h-4 w-4" />
-              </Button>
             </TableCell>
           </TableRow>
         </TableBody>
@@ -365,47 +358,47 @@ watch([searchQuery], () => {
     <Dialog v-model:open="isInfoModalOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Import Invoice Information</DialogTitle>
+          <DialogTitle>Chi tiết phiếu nhập</DialogTitle>
         </DialogHeader>
         <div v-if="currentImportInvoice" class="space-y-4">
           <div>
-            <Label class="font-bold">Date:</Label>
+            <Label class="font-bold">Ngày nhập:</Label>
             <p>{{ new Date(currentImportInvoice.importDate).toLocaleString() }}</p>
           </div>
           <div>
-            <Label class="font-bold">Provider:</Label>
+            <Label class="font-bold">Nhà cung cấp:</Label>
             <p>{{ currentImportInvoice.Provider.providerName }}</p>
           </div>
           <div>
-            <Label class="font-bold">Employee:</Label>
+            <Label class="font-bold">Nhân viên tạo:</Label>
             <p>{{ currentImportInvoice.Employee.person.name }}</p>
           </div>
           <div>
-            <Label class="font-bold">Total Expense:</Label>
-            <p>${{ currentImportInvoice.totalExpense.toFixed(2) }}</p>
+            <Label class="font-bold">Tổng tiền:</Label>
+            <p>{{ formatCurrency(currentImportInvoice.totalExpense) }}</p>
           </div>
           <div>
-            <Label class="font-bold">Imported Ingredients:</Label>
+            <Label class="font-bold">Nguyên Liệu Nhập:</Label>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Ingredient</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Total Expense</TableHead>
+                  <TableHead>Nguyên liệu</TableHead>
+                  <TableHead>Số lượng</TableHead>
+                  <TableHead>Tổng chi tiêu</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 <TableRow v-for="detail in currentImportInvoice.importInvoiceDetail" :key="detail.id">
                   <TableCell>{{ detail.ingredient.ingredientName }}</TableCell>
                   <TableCell>{{ detail.quantity }}</TableCell>
-                  <TableCell>${{ detail.totalExpense.toFixed(2) }}</TableCell>
+                  <TableCell>{{ formatCurrency(detail.totalExpense) }}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
           </div>
         </div>
         <DialogFooter>
-          <Button @click="isInfoModalOpen = false">Close</Button>
+          <Button @click="isInfoModalOpen = false">Đóng</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

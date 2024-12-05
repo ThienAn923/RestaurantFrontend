@@ -9,7 +9,9 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useExpenseStore } from './pinia/expense.store'
 import { formatCurrency } from '@/lib/formatMoney'
-import { format } from 'path'
+
+import { useToast } from "./ui/toast"
+const { toast } = useToast();
 
 const expenseStore = useExpenseStore()
 
@@ -40,6 +42,7 @@ onMounted(() => {
 })
 
 const addExpense = async () => {
+    if (!validateNewExpense()) return;
     await expenseStore.createExpense(newExpense.value)
     isAddModalOpen.value = false
     newExpense.value = { expenseName: '', expenseDescription: '', expenseMoney: 0 } //reset
@@ -51,6 +54,7 @@ const openEditModal = (Expense: { id: string, expenseName: string, expenseDescri
 }
 
 const editExpense = async () => {
+    if (!validateCurrentExpense()) return;
     const { id, createAt, ...expense } = currentExpense.value //because it only need as below
     await expenseStore.updateExpense(id, expense)
 
@@ -62,11 +66,7 @@ const editExpense = async () => {
     isEditModalOpen.value = false
 }
 
-const deleteExpense = async (id: string) => {
-    await expenseStore.deleteExpense(id);
-    // Remove the deleted expense from the local state
-    expenseStore.expenses = expenseStore.expenses.filter(e => e.id !== id);
-}
+
 
 const pageNumbers = computed(() => {
     const totalPages = expenseStore.totalPages
@@ -136,6 +136,71 @@ const goToPage = (page: number) => {
 //     }
 // };
 
+
+const isDeleteDialogOpen = ref(false);
+const IDOfObjectAboutToBeDeleted = ref('');
+const openDeleteConfirmDialog = (objectID: string) => {
+    // console.log("tableID:", tableID);
+    IDOfObjectAboutToBeDeleted.value = objectID;
+    isDeleteDialogOpen.value = true;
+}
+const deleteExpense = async () => {
+    await expenseStore.deleteExpense(IDOfObjectAboutToBeDeleted.value);
+    // Remove the deleted expense from the local state
+    expenseStore.expenses = expenseStore.expenses.filter(e => e.id !== IDOfObjectAboutToBeDeleted.value);
+}
+
+const validateNewExpense = () => {
+    if (!newExpense.value.expenseName || newExpense.value.expenseName.length > 100) {
+        toast({
+            title: 'Lỗi',
+            description: 'Tên chi tiêu không được để trống và phải nhỏ hơn 100 ký tự',
+        });
+        return false;
+    }
+    if (newExpense.value.expenseDescription && newExpense.value.expenseDescription.length > 1024) {
+        toast({
+            title: 'Lỗi',
+            description: 'Mô tả chi tiêu phải nhỏ hơn 1024 ký tự',
+        });
+        return false;
+    }
+    if (isNaN(newExpense.value.expenseMoney)) {
+        toast({
+            title: 'Lỗi',
+            description: 'Số tiền phải là một số hợp lệ',
+        });
+        return false;
+    }
+    return true;
+};
+
+const validateCurrentExpense = () => {
+    if (!currentExpense.value.expenseName || currentExpense.value.expenseName.length > 100) {
+        toast({
+            title: 'Lỗi',
+            description: 'Tên chi tiêu không được để trống và phải nhỏ hơn 100 ký tự',
+        });
+        return false;
+    }
+    if (currentExpense.value.expenseDescription && currentExpense.value.expenseDescription.length > 1024) {
+        toast({
+            title: 'Lỗi',
+            description: 'Mô tả chi tiêu phải nhỏ hơn 1024 ký tự',
+        });
+        return false;
+    }
+    if (isNaN(currentExpense.value.expenseMoney)) {
+        toast({
+            title: 'Lỗi',
+            description: 'Số tiền phải là một số hợp lệ',
+        });
+        return false;
+    }
+    return true;
+};
+
+
 </script>
 
 <template>
@@ -201,7 +266,7 @@ const goToPage = (page: number) => {
                                 class="text-blue-600 hover:text-blue-600 hover:bg-blue-100">
                                 <PencilIcon class="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" @click="deleteExpense(expense.id)"
+                            <Button variant="ghost" size="icon" @click="openDeleteConfirmDialog(expense.id)"
                                 class="text-red-500 hover:text-white hover:bg-red-500">
                                 <Trash2Icon class="h-4 w-4" />
                             </Button>
@@ -292,6 +357,23 @@ const goToPage = (page: number) => {
                         <Button type="submit">Lưu</Button>
                     </DialogFooter>
                 </form>
+            </DialogContent>
+        </Dialog>
+
+        <Dialog v-model:open="isDeleteDialogOpen">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Xác nhận xóa chi tiêu này?</DialogTitle>
+                    <DialogDescription>
+                        Bạn có chắc chắn muốn xóa chi tiêu này. Hành động này không thể hoàn tác trừ
+                        khi liên hệ với kỹ
+                        thuật viên.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button @click="isDeleteDialogOpen = false"> Hủy </Button>
+                    <Button @click="deleteExpense" class="bg-red-400 hover:bg-red-500 text-white">Xóa</Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     </div>
